@@ -11,7 +11,7 @@ function App() {
         <div className="col-span-3 h-screen hidden md:block">
           <Sidebar />
         </div>
-        <div className="col-span-12 md:col-span-9 flex items-center justify-center">
+        <div className="col-span-12 md:col-span-9 flex flex-col items-start justify-start p-4">
           <Outlet />
         </div>
       </div>

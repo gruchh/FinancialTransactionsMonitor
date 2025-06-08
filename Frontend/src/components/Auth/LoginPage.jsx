@@ -12,7 +12,6 @@ const LoginPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState(null);
 
-  // Validation function
   const validateForm = () => {
     const newErrors = {};
 
@@ -32,7 +31,6 @@ const LoginPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -40,7 +38,6 @@ const LoginPage = () => {
       [name]: type === "checkbox" ? checked : value,
     }));
 
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -49,7 +46,6 @@ const LoginPage = () => {
     }
   };
 
-  // Submit handler
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -74,7 +70,6 @@ const LoginPage = () => {
         </div>
 
         <div className="space-y-6">
-          {/* Status Message */}
           {status && (
             <div
               className={`p-3 rounded-lg text-sm ${
@@ -87,7 +82,6 @@ const LoginPage = () => {
             </div>
           )}
 
-          {/* Email Field */}
           <div>
             <label
               htmlFor="email"
@@ -115,7 +109,6 @@ const LoginPage = () => {
             )}
           </div>
 
-          {/* Password Field */}
           <div>
             <label
               htmlFor="password"
@@ -150,7 +143,6 @@ const LoginPage = () => {
             )}
           </div>
 
-          {/* Remember Me Checkbox */}
           <div className="flex items-center justify-between">
             <label className="flex items-center">
               <input
@@ -172,7 +164,6 @@ const LoginPage = () => {
             </a>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             onClick={handleSubmit}
@@ -186,7 +177,6 @@ const LoginPage = () => {
             {isSubmitting ? "Logowanie..." : "Zaloguj się"}
           </button>
 
-          {/* Register Link */}
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Nie masz konta?{" "}
