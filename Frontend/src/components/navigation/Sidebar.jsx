@@ -1,6 +1,6 @@
 import { sidebarItems } from "./SidebarItems";
 
-function NavMenu() {
+function Sidebar() {
   return (
     <div className="bg-gray-800 p-4 overflow-y-auto h-full">
       <ul className="flex flex-col w-full">
@@ -48,4 +48,4 @@ function NavMenu() {
   );
 }
 
-export default NavMenu;
+export default Sidebar;
