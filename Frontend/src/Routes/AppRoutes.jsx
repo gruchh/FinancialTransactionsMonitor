@@ -3,9 +3,9 @@ import App from "../App";
 import LoginPage from "../components/Auth/LoginPage";
 import Dashboard from "../components/Dashboard/Dashboard";
 import NotFound from "../components/NotFound/NotFound";
-import TradeForm from "../components/Trades/TradeForm";
 import TradesList from "../components/Trades/TradesList";
 import TradesAnalytics from "../components/Trades/TradesAnalytics";
+import { TradeForm } from "../components/Trades/TradeForm/TradeForm";
 
 function AppRoutes() {
   return (

@@ -1,170 +1,9 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
-import { useEffect } from "react";
-import * as Yup from "yup";
+import { AutoCalculateField } from "./AutoCalculateField";
+import { AnimatedExchangeRates } from "./AnimatedExchangeRates";
+import { tradeValidationSchema } from "./Validation/tradeValidationSchema";
 
-const tradeValidationSchema = Yup.object({
-  fund: Yup.object().nullable().required("Fund is required"),
-  tradeDate: Yup.date()
-    .required("Trade date is required")
-    .max(new Date(), "Trade date cannot be in the future"),
-  type: Yup.string()
-    .oneOf(["BUY", "SELL"], "Invalid trade type")
-    .required("Trade type is required"),
-  currency: Yup.string()
-    .oneOf(["PLN", "EUR", "USD"], "Invalid currency")
-    .required("Currency is required"),
-  quantity: Yup.number()
-    .positive("Quantity must be positive")
-    .required("Quantity is required")
-    .test("decimal", "Quantity can have maximum 4 decimal places", (value) => {
-      if (!value) return true;
-      return /^\d+(\.\d{1,4})?$/.test(value.toString());
-    }),
-  pricePerUnit: Yup.number()
-    .positive("Price per unit must be positive")
-    .required("Price per unit is required")
-    .test("decimal", "Price can have maximum 4 decimal places", (value) => {
-      if (!value) return true;
-      return /^\d+(\.\d{1,4})?$/.test(value.toString());
-    }),
-  eurPlnRate: Yup.number()
-    .positive("EUR/PLN rate must be positive")
-    .nullable()
-    .when("currency", {
-      is: "EUR",
-      then: (schema) =>
-        schema.required("EUR/PLN rate is required when currency is EUR"),
-      otherwise: (schema) => schema,
-    })
-    .test("decimal", "Rate can have maximum 4 decimal places", (value) => {
-      if (!value) return true;
-      return /^\d+(\.\d{1,4})?$/.test(value.toString());
-    }),
-  usdPlnRate: Yup.number()
-    .positive("USD/PLN rate must be positive")
-    .nullable()
-    .when("currency", {
-      is: "USD",
-      then: (schema) =>
-        schema.required("USD/PLN rate is required when currency is USD"),
-      otherwise: (schema) => schema,
-    })
-    .test("decimal", "Rate can have maximum 4 decimal places", (value) => {
-      if (!value) return true;
-      return /^\d+(\.\d{1,4})?$/.test(value.toString());
-    }),
-});
-
-const AutoCalculateField = ({ values, setFieldValue }) => {
-  useEffect(() => {
-    if (values.quantity && values.pricePerUnit) {
-      const baseTotal =
-        parseFloat(values.quantity) * parseFloat(values.pricePerUnit);
-      let totalInPln = baseTotal;
-
-      if (values.currency === "EUR" && values.eurPlnRate) {
-        totalInPln = baseTotal * parseFloat(values.eurPlnRate);
-      } else if (values.currency === "USD" && values.usdPlnRate) {
-        totalInPln = baseTotal * parseFloat(values.usdPlnRate);
-      }
-
-      setFieldValue("totalValuePln", totalInPln.toFixed(2));
-    } else {
-      setFieldValue("totalValuePln", "");
-    }
-  }, [
-    values.quantity,
-    values.pricePerUnit,
-    values.currency,
-    values.eurPlnRate,
-    values.usdPlnRate,
-    setFieldValue,
-  ]);
-
-  return null;
-};
-
-const AnimatedExchangeRates = ({ currency, errors, touched }) => {
-  const isVisible = currency !== "PLN";
-
-  return (
-    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-      isVisible 
-        ? "max-h-40 opacity-100 translate-y-0" 
-        : "max-h-0 opacity-0 -translate-y-2"
-    }`}>
-      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 shadow-sm">
-        <h3 className="text-sm font-medium text-blue-900 mb-3 flex items-center">
-          <svg 
-            className="w-4 h-4 mr-2" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" 
-            />
-          </svg>
-          Exchange Rates
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {currency === "EUR" && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                EUR/PLN Rate <span className="text-red-500">*</span>
-              </label>
-              <Field
-                name="eurPlnRate"
-                type="number"
-                step="0.0001"
-                placeholder="0.0000"
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                  errors.eurPlnRate && touched.eurPlnRate
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-300 bg-white"
-                }`}
-              />
-              <ErrorMessage
-                name="eurPlnRate"
-                component="div"
-                className="text-red-500 text-sm mt-1"
-              />
-            </div>
-          )}
-
-          {currency === "USD" && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                USD/PLN Rate <span className="text-red-500">*</span>
-              </label>
-              <Field
-                name="usdPlnRate"
-                type="number"
-                step="0.0001"
-                placeholder="0.0000"
-                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                  errors.usdPlnRate && touched.usdPlnRate
-                    ? "border-red-500 bg-red-50"
-                    : "border-gray-300 bg-white"
-                }`}
-              />
-              <ErrorMessage
-                name="usdPlnRate"
-                component="div"
-                className="text-red-500 text-sm mt-1"
-              />
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const TradeForm = ({
+export const TradeForm = ({
   trade = null,
   funds = [],
   onSubmit,
@@ -232,6 +71,7 @@ const TradeForm = ({
                 values={values}
                 setFieldValue={setFieldValue}
               />
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Fund <span className="text-red-500">*</span>
@@ -399,10 +239,11 @@ const TradeForm = ({
                 </div>
               </div>
 
-              <AnimatedExchangeRates 
-                currency={values.currency} 
-                errors={errors} 
-                touched={touched} 
+              {/* Exchange Rates */}
+              <AnimatedExchangeRates
+                currency={values.currency}
+                errors={errors}
+                touched={touched}
               />
 
               <div>
@@ -423,7 +264,6 @@ const TradeForm = ({
                 </p>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                 <button
                   type="button"
@@ -474,5 +314,3 @@ const TradeForm = ({
     </div>
   );
 };
-
-export default TradeForm;
