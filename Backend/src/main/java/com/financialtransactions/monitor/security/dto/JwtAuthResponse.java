@@ -1,4 +1,4 @@
-package com.financialtransactions.monitor.security.model;
+package com.financialtransactions.monitor.security.dto;
 
 import lombok.Builder;
 import lombok.Getter;

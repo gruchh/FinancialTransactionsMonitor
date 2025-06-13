@@ -3,42 +3,45 @@ package com.financialtransactions.monitor.security.service;
 import com.financialtransactions.monitor.security.model.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import java.security.NoSuchAlgorithmException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class JwtService {
 
-    private String secretkey = "";
+    private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
+
+    @Value("${jwt.token.secretKey}")
+    private String secretkey="dasdasdasdasdaskvcxicisaicisaciasca";
 
     @Value("${jwt.token.duration:3600000}")
     private Long tokenDurationTime;
 
-    public JwtService() {
-        try {
-            KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
-            SecretKey sk = keyGen.generateKey();
-            secretkey = Base64.getEncoder().encodeToString(sk.getEncoded());
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Błąd podczas generowania klucza JWT", e);
+    @PostConstruct
+    public void init() {
+        if (secretkey == null || secretkey.length() < 32) {
+            logger.info("Wczytany klucz JWT: {}", secretkey);
+            throw new IllegalStateException("Klucz JWT musi mieć co najmniej 32 znaki dla HS256");
         }
+        logger.info("JwtService zainicjalizowany z kluczem o długości {} znaków", secretkey.length());
     }
 
     public String generateToken(String username, String email, Set<Role> roles) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("email", email);
         claims.put("roles", roles.stream()
-                .map(Role::getName)
+                .map(Role::name)
                 .collect(Collectors.toSet()));
 
         return Jwts.builder()
@@ -46,12 +49,13 @@ public class JwtService {
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + tokenDurationTime))
-                .signWith(getKey())
+                .signWith(getKey(), Jwts.SIG.HS256) // Jawne określenie algorytmu
                 .compact();
     }
 
     private SecretKey getKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretkey);
+        byte[] keyBytes = secretkey.getBytes(StandardCharsets.UTF_8);
+        logger.debug("Pobieranie klucza JWT, długość: {} bajtów", keyBytes.length);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
@@ -63,12 +67,16 @@ public class JwtService {
         return extractClaim(token, claims -> claims.get("email", String.class));
     }
 
-    @SuppressWarnings("unchecked")
-    public Set<String> extractRoles(String token) {
+    public Set<Role> extractRoles(String token) {
         return extractClaim(token, claims -> {
             Object rolesObj = claims.get("roles");
-            if (rolesObj instanceof Collection) {
-                return new HashSet<>((Collection<String>) rolesObj);
+            if (rolesObj instanceof Collection<?>) {
+                Collection<?> collection = (Collection<?>) rolesObj;
+                return collection.stream()
+                        .filter(item -> item instanceof String)
+                        .map(item -> (String) item)
+                        .map(Role::valueOf)
+                        .collect(Collectors.toSet());
             }
             return new HashSet<>();
         });
@@ -80,27 +88,36 @@ public class JwtService {
     }
 
     public Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(getKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        try {
+            return Jwts.parser()
+                    .verifyWith(getKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (Exception e) {
+            logger.error("Błąd podczas parsowania tokenu JWT: {}", e.getMessage());
+            throw new RuntimeException("Nieprawidłowy token JWT", e);
+        }
     }
 
     public boolean validateToken(String token, UserDetails userDetails) {
-        final String userName = extractUsername(token);
-        return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        try {
+            final String userName = extractUsername(token);
+            return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        } catch (Exception e) {
+            logger.error("Błąd walidacji tokenu JWT: {}", e.getMessage());
+            return false;
+        }
     }
 
     public String refreshToken(String token) {
         final Claims claims = extractAllClaims(token);
-
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(claims.getSubject())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + tokenDurationTime))
-                .signWith(getKey())
+                .signWith(getKey(), Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -116,6 +133,7 @@ public class JwtService {
         try {
             return !isTokenExpired(token);
         } catch (Exception e) {
+            logger.error("Błąd sprawdzania ważności tokenu JWT: {}", e.getMessage());
             return false;
         }
     }

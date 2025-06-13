@@ -1,19 +1,18 @@
 package com.financialtransactions.monitor.security.model;
 
-import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-@Entity(name = "ROLES")
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
-@Setter
-@Builder
-public class Role {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+@RequiredArgsConstructor
+public enum Role {
+    ADMIN("ROLE_ADMIN"),
+    TRADER("ROLE_TRADER");
 
-    @Column(nullable = false, unique = true)
-    private String name;
+    private final String authority;
+
+    @Override
+    public String toString() {
+        return authority;
+    }
 }
