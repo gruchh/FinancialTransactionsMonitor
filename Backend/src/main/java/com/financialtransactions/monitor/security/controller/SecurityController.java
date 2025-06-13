@@ -7,8 +7,7 @@ import com.financialtransactions.monitor.security.service.JwtService;
 import com.financialtransactions.monitor.security.service.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -24,10 +23,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
+@Slf4j
 @RestController
 public class SecurityController {
 
-    private static final Logger log = LoggerFactory.getLogger(SecurityController.class);
     private final UserService userService;
     private final JwtService jwtService;
 
