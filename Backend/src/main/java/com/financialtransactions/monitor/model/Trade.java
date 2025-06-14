@@ -1,6 +1,7 @@
 package com.financialtransactions.monitor.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,6 +28,10 @@ public class Trade {
     @JoinColumn(name = "fund_id")
     @NotNull
     private Fund fund;
+
+    @NotNull
+    @Column(name="owner_name")
+    private String ownerUsername;
 
     @NotNull
     @Column(name = "trade_date")

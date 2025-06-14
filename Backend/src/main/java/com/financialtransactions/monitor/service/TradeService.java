@@ -8,12 +8,14 @@ import com.financialtransactions.monitor.model.dto.FundDto;
 import com.financialtransactions.monitor.model.dto.TradeDto;
 import com.financialtransactions.monitor.repository.TradeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -24,21 +26,42 @@ public class TradeService {
     private final TradeMapper tradeMapper;
     private final FundMapper fundMapper;
 
-    public List<TradeDto> getAllTrades() {
-        return tradeMapper.toDtoList(tradeRepository.findAllOrderByTradeDateDesc());
+    /**
+     * Pobiera aktualnie zalogowanego użytkownika z kontekstu Spring Security
+     */
+    private String getCurrentUsername() {
+        return SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
     }
 
-    public Optional<TradeDto> getTradeById(Long id) {
-        return tradeRepository.findById(id)
-                .map(tradeMapper::toDto);
+    public List<Trade> getCurrentUserTrades() {
+        return tradeRepository.findByOwnerUsernameOrderByTradeDateDesc(getCurrentUsername());
     }
 
-    public List<TradeDto> getTradesByFund(Long fundId) {
-        return tradeMapper.toDtoList(tradeRepository.findByFundIdOrderByTradeDateDesc(fundId));
+    public List<Trade> getCurrentUserTradesByFund(Fund fund) {
+        return tradeRepository.findByFundAndOwnerUsernameOrderByTradeDateDesc(fund, getCurrentUsername());
+    }
+
+    public List<Trade> getCurrentUserTradesByFundId(Long fundId) {
+        return tradeRepository.findByFundIdAndOwnerUsernameOrderByTradeDateDesc(fundId, getCurrentUsername());
+    }
+
+    public List<Fund> getCurrentUserFunds() {
+        return tradeRepository.findDistinctFundsByOwnerUsername(getCurrentUsername());
+    }
+
+    public Trade getTradeById(Long tradeId) {
+        return tradeRepository.findByIdAndOwnerUsername(tradeId, getCurrentUsername())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Trade not found or access denied"));
     }
 
     public TradeDto saveTrade(TradeDto tradeDto) {
         Trade trade = tradeMapper.toEntity(tradeDto);
+
+        trade.setOwnerUsername(getCurrentUsername());
 
         trade.setEurPlnRate(externalApiService.getEurPlnRate());
         trade.setUsdPlnRate(externalApiService.getUsdPlnRate());
@@ -62,9 +85,7 @@ public class TradeService {
     }
 
     public TradeDto updateTrade(Long id, TradeDto tradeDto) {
-        Trade trade = tradeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Trade not found with id " + id));
-
+        Trade trade = getTradeById(id);
         trade.setTradeDate(tradeDto.getTradeDate());
         trade.setType(tradeDto.getType());
         trade.setQuantity(tradeDto.getQuantity());
@@ -88,10 +109,16 @@ public class TradeService {
     }
 
     public void deleteTrade(Long id) {
-        tradeRepository.deleteById(id);
+        String currentUsername = getCurrentUsername();
+        Trade trade = tradeRepository.findByIdAndOwnerUsername(id, currentUsername)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Trade not found or access denied"));
+
+        tradeRepository.delete(trade);
     }
 
     public List<FundDto> getPortfolioFunds() {
-        return fundMapper.toDtoList(tradeRepository.findDistinctFunds());
+        return fundMapper.toDtoList(getCurrentUserFunds());
     }
 }

@@ -2,6 +2,7 @@ package com.financialtransactions.monitor.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.financialtransactions.monitor.model.TradeType;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,6 +20,7 @@ public class TradeDto {
 
     private Long id;
     private FundDto fund;
+    private String ownerUsername;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate tradeDate;
