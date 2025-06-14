@@ -1,5 +1,7 @@
 package com.financialtransactions.monitor.security.service;
 
+import com.financialtransactions.monitor.security.dto.JwtAuthRequest;
+import com.financialtransactions.monitor.security.dto.RegisterRequest;
 import com.financialtransactions.monitor.security.model.Role;
 import com.financialtransactions.monitor.security.model.User;
 import com.financialtransactions.monitor.security.repository.UserRepository;
@@ -25,39 +27,43 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public String register(User user) {
-        if (userRepository.existsByEmail(user.getEmail())) {
-            throw new IllegalStateException("User with this email already exists");
-        }
-
-        if (userRepository.existsByUsername(user.getUsername())) {
+    public String register(RegisterRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
             throw new IllegalStateException("User with this username already exists");
         }
 
-        String originalPassword = user.getPassword();
-        user.setPassword(passwordEncoder.encode(originalPassword));
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalStateException("User with this email already exists");
+        }
 
-        user.setRoles(Set.of(Role.TRADER));
+        User user = User.builder()
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .email(request.getEmail())
+                .roles(Set.of(Role.TRADER))
+                .build();
+
         userRepository.save(user);
 
-        return verify(User.builder()
-                .username(user.getUsername())
-                .password(originalPassword)
-                .email(user.getEmail())
-                .roles(Set.of(Role.TRADER))
-                .build());
+        return verify(new JwtAuthRequest(request.getUsername(), request.getPassword()));
     }
 
-    public String verify(User user) {
-        User existingUser = userRepository.findByUsername(user.getUsername())
+    public String verify(JwtAuthRequest request) {
+        User existingUser = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new NoSuchElementException("User not found"));
+
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
+
         if (authentication.isAuthenticated()) {
-            return jwtService.generateToken(existingUser.getUsername(), existingUser.getEmail(), existingUser.getRoles());
+            return jwtService.generateToken(
+                    existingUser.getUsername(),
+                    existingUser.getEmail(),
+                    existingUser.getRoles()
+            );
         } else {
-            throw new BadCredentialsException("Authentication failed for user: " + user.getUsername());
+            throw new BadCredentialsException("Authentication failed for user: " + request.getUsername());
         }
     }
 }

@@ -1,9 +1,10 @@
 package com.financialtransactions.monitor.controller;
 
-import com.financialtransactions.monitor.model.Fund;
+import com.financialtransactions.monitor.model.dto.FundDto;
 import com.financialtransactions.monitor.service.FundService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,33 +20,39 @@ public class FundController {
     private final FundService fundService;
 
     @GetMapping
-    public List<Fund> getAllFunds() {
-        return fundService.getAllFunds();
+    public ResponseEntity<List<FundDto>> getAllFunds() {
+        List<FundDto> fundsDto = fundService.getAllFunds();
+        return ResponseEntity.ok(fundsDto);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Fund> getFundById(@PathVariable Long id) {
+    public ResponseEntity<FundDto> getFundById(@PathVariable Long id) {
         return fundService.getFundById(id)
-                .map(fund -> ResponseEntity.ok().body(fund))
+                .map(fundDto -> ResponseEntity.ok().body(fundDto))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/symbol/{symbol}")
-    public ResponseEntity<Fund> getFundBySymbol(@PathVariable String symbol) {
+    public ResponseEntity<FundDto> getFundBySymbol(@PathVariable String symbol) {
         return fundService.getFundBySymbol(symbol)
-                .map(fund -> ResponseEntity.ok().body(fund))
+                .map(fundDto -> ResponseEntity.ok().body(fundDto))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public Fund createFund(@RequestBody Fund fund) {
-        return fundService.saveFund(fund);
+    public ResponseEntity<FundDto> createFund(@RequestBody FundDto fundDto) {
+        try {
+            FundDto createdFund = fundService.saveFund(fundDto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdFund);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Fund> updateFund(@PathVariable Long id, @RequestBody Fund fundDetails) {
+    public ResponseEntity<FundDto> updateFund(@PathVariable Long id, @RequestBody FundDto fundDto) {
         try {
-            Fund updatedFund = fundService.updateFund(id, fundDetails);
+            FundDto updatedFund = fundService.updateFund(id, fundDto);
             return ResponseEntity.ok(updatedFund);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
@@ -53,18 +60,18 @@ public class FundController {
     }
 
     @PutMapping("/{id}/price")
-    public ResponseEntity<Fund> updateFundPrice(@PathVariable Long id) {
+    public ResponseEntity<FundDto> updateFundPrice(@PathVariable Long id) {
         try {
-            Fund updatedFund = fundService.updateFundPrice(id);
-            return ResponseEntity.ok(updatedFund);
+            FundDto updatedFundDto = fundService.updateFundPrice(id);
+            return ResponseEntity.ok(updatedFundDto);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteFund(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteFund(@PathVariable Long id) {
         fundService.deleteFund(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }

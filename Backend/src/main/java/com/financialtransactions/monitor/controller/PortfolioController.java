@@ -1,6 +1,7 @@
 package com.financialtransactions.monitor.controller;
 
 import com.financialtransactions.monitor.model.Fund;
+import com.financialtransactions.monitor.model.dto.FundDto;
 import com.financialtransactions.monitor.service.ExternalApiService;
 import com.financialtransactions.monitor.service.TradeService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,7 +27,7 @@ public class PortfolioController {
     private final ExternalApiService externalApiService;
 
     @GetMapping("/funds")
-    public List<Fund> getPortfolioFunds() {
+    public List<FundDto> getPortfolioFunds() {
         return tradeService.getPortfolioFunds();
     }
 

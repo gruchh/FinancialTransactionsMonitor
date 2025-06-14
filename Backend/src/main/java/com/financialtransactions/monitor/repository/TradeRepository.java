@@ -11,6 +11,7 @@ import java.util.List;
 
 @Repository
 public interface TradeRepository extends JpaRepository<Trade, Long> {
+
     List<Trade> findByFundOrderByTradeDateDesc(Fund fund);
 
     @Query("SELECT t FROM Trade t WHERE t.fund.id = :fundId ORDER BY t.tradeDate DESC")

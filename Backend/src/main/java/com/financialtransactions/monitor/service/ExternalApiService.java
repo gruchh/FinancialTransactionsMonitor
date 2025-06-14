@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 @Service
 public class ExternalApiService {
+
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
     private final Map<String, BigDecimal> currencyCache = new ConcurrentHashMap<>();
@@ -53,7 +54,6 @@ public class ExternalApiService {
 
     private void updateCurrencyRates() {
         try {
-            // NBP API for PLN rates
             String nbpUrl = "https://api.nbp.pl/api/exchangerates/tables/A?format=json";
             String response = webClient.get()
                     .uri(nbpUrl)
@@ -76,7 +76,6 @@ public class ExternalApiService {
             }
             lastCurrencyUpdate = LocalDateTime.now();
         } catch (Exception e) {
-            // Fallback values if API fails
             currencyCache.put("EUR_PLN", BigDecimal.valueOf(4.30));
             currencyCache.put("USD_PLN", BigDecimal.valueOf(4.00));
         }
@@ -84,13 +83,10 @@ public class ExternalApiService {
 
     private void updateFundPrice(String symbol) {
         try {
-            // Mock implementation - in real scenario you'd use Alpha Vantage, Yahoo Finance, etc.
-            // For demonstration, we'll use random prices
             BigDecimal mockPrice = BigDecimal.valueOf(Math.random() * 200 + 50);
             priceCache.put(symbol.toUpperCase(), mockPrice);
             lastPriceUpdate = LocalDateTime.now();
         } catch (Exception e) {
-            // Fallback price
             priceCache.put(symbol.toUpperCase(), BigDecimal.valueOf(100.0));
         }
     }

@@ -5,6 +5,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -14,8 +16,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Service
 public class JwtService {
@@ -23,7 +23,7 @@ public class JwtService {
     private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
 
     @Value("${jwt.token.secretKey}")
-    private String secretkey="dasdasdasdasdaskvcxicisaicisaciasca";
+    private String secretkey;
 
     @Value("${jwt.token.duration:3600000}")
     private Long tokenDurationTime;
@@ -49,7 +49,7 @@ public class JwtService {
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + tokenDurationTime))
-                .signWith(getKey(), Jwts.SIG.HS256) // Jawne określenie algorytmu
+                .signWith(getKey(), Jwts.SIG.HS256)
                 .compact();
     }
 

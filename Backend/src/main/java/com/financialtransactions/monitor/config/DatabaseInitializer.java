@@ -23,7 +23,6 @@ public class DatabaseInitializer {
     @Transactional
     @EventListener(ApplicationReadyEvent.class)
     public void initDatabase() {
-        // Tworzenie i zapisywanie testowych funduszy
         Fund fund1 = new Fund(null, "AAPL", "Apple Inc.", "USD", "NASDAQ", "Technologia", new BigDecimal("192.50"), LocalDateTime.now());
         Fund fund2 = new Fund(null, "GOOGL", "Alphabet Inc.", "USD", "NASDAQ", "Technologia", new BigDecimal("172.30"), LocalDateTime.now());
         Fund fund3 = new Fund(null, "PKO", "PKO Bank Polski", "PLN", "GPW", "Finanse", new BigDecimal("56.75"), LocalDateTime.now());
@@ -32,7 +31,6 @@ public class DatabaseInitializer {
         entityManager.persist(fund2);
         entityManager.persist(fund3);
 
-        // Tworzenie i zapisywanie testowych transakcji
         Trade trade1 = new Trade(
                 null,
                 fund1,
@@ -40,9 +38,9 @@ public class DatabaseInitializer {
                 TradeType.BUY,
                 new BigDecimal("100.0000"),
                 new BigDecimal("192.50"),
-                new BigDecimal("4.25"), // Kurs EUR/PLN
-                new BigDecimal("3.95"), // Kurs USD/PLN
-                new BigDecimal("19250.00"), // totalValuePln = ilość * cena za jednostkę
+                new BigDecimal("4.25"),
+                new BigDecimal("3.95"),
+                new BigDecimal("19250.00"),
                 LocalDateTime.now(),
                 LocalDateTime.now()
         );

@@ -1,7 +1,6 @@
-package com.financialtransactions.monitor.model;
+package com.financialtransactions.monitor.model.dto;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,32 +13,16 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Getter
 @Setter
-@Entity
-@Table(name = "funds")
-public class Fund {
+public class FundDto {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @NotBlank
-    @Column(unique = true)
     private String symbol;
-
-    @NotBlank
     private String name;
-
-    @NotBlank
     private String currency;
-
-    @NotBlank
     private String market;
-
     private String sector;
-
-    @Column(name = "current_price", precision = 10, scale = 4)
     private BigDecimal currentPrice;
 
-    @Column(name = "last_updated")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime lastUpdated;
 }

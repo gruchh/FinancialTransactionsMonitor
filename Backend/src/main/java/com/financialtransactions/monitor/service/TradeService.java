@@ -1,7 +1,11 @@
 package com.financialtransactions.monitor.service;
 
+import com.financialtransactions.monitor.mapper.FundMapper;
+import com.financialtransactions.monitor.mapper.TradeMapper;
 import com.financialtransactions.monitor.model.Fund;
 import com.financialtransactions.monitor.model.Trade;
+import com.financialtransactions.monitor.model.dto.FundDto;
+import com.financialtransactions.monitor.model.dto.TradeDto;
 import com.financialtransactions.monitor.repository.FundRepository;
 import com.financialtransactions.monitor.repository.TradeRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,27 +21,29 @@ import java.util.Optional;
 public class TradeService {
 
     private final TradeRepository tradeRepository;
-    private final FundRepository fundRepository;
     private final ExternalApiService externalApiService;
+    private final TradeMapper tradeMapper;
+    private final FundMapper fundMapper;
 
-    public List<Trade> getAllTrades() {
-        return tradeRepository.findAllOrderByTradeDateDesc();
+    public List<TradeDto> getAllTrades() {
+        return tradeMapper.toDtoList(tradeRepository.findAllOrderByTradeDateDesc());
     }
 
-    public Optional<Trade> getTradeById(Long id) {
-        return tradeRepository.findById(id);
+    public Optional<TradeDto> getTradeById(Long id) {
+        return tradeRepository.findById(id)
+                .map(tradeMapper::toDto);
     }
 
-    public List<Trade> getTradesByFund(Long fundId) {
-        return tradeRepository.findByFundIdOrderByTradeDateDesc(fundId);
+    public List<TradeDto> getTradesByFund(Long fundId) {
+        return tradeMapper.toDtoList(tradeRepository.findByFundIdOrderByTradeDateDesc(fundId));
     }
 
-    public Trade saveTrade(Trade trade) {
-        // Get current exchange rates
+    public TradeDto saveTrade(TradeDto tradeDto) {
+        Trade trade = tradeMapper.toEntity(tradeDto);
+
         trade.setEurPlnRate(externalApiService.getEurPlnRate());
         trade.setUsdPlnRate(externalApiService.getUsdPlnRate());
 
-        // Calculate total value in PLN
         BigDecimal totalValue = trade.getPricePerUnit().multiply(trade.getQuantity());
         BigDecimal exchangeRate = BigDecimal.ONE;
 
@@ -52,19 +58,19 @@ public class TradeService {
         trade.setCreatedAt(LocalDateTime.now());
         trade.setUpdatedAt(LocalDateTime.now());
 
-        return tradeRepository.save(trade);
+        Trade savedTrade = tradeRepository.save(trade);
+        return tradeMapper.toDto(savedTrade);
     }
 
-    public Trade updateTrade(Long id, Trade tradeDetails) {
+    public TradeDto updateTrade(Long id, TradeDto tradeDto) {
         Trade trade = tradeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Trade not found with id " + id));
 
-        trade.setTradeDate(tradeDetails.getTradeDate());
-        trade.setType(tradeDetails.getType());
-        trade.setQuantity(tradeDetails.getQuantity());
-        trade.setPricePerUnit(tradeDetails.getPricePerUnit());
+        trade.setTradeDate(tradeDto.getTradeDate());
+        trade.setType(tradeDto.getType());
+        trade.setQuantity(tradeDto.getQuantity());
+        trade.setPricePerUnit(tradeDto.getPricePerUnit());
 
-        // Recalculate PLN value
         BigDecimal totalValue = trade.getPricePerUnit().multiply(trade.getQuantity());
         BigDecimal exchangeRate = BigDecimal.ONE;
 
@@ -78,14 +84,15 @@ public class TradeService {
         trade.setTotalValuePln(totalValue.multiply(exchangeRate));
         trade.setUpdatedAt(LocalDateTime.now());
 
-        return tradeRepository.save(trade);
+        Trade updatedTrade = tradeRepository.save(trade);
+        return tradeMapper.toDto(updatedTrade);
     }
 
     public void deleteTrade(Long id) {
         tradeRepository.deleteById(id);
     }
 
-    public List<Fund> getPortfolioFunds() {
-        return tradeRepository.findDistinctFunds();
+    public List<FundDto> getPortfolioFunds() {
+        return fundMapper.toDtoList(tradeRepository.findDistinctFunds());
     }
 }
