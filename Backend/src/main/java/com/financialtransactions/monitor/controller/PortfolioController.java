@@ -1,6 +1,5 @@
 package com.financialtransactions.monitor.controller;
 
-import com.financialtransactions.monitor.model.Fund;
 import com.financialtransactions.monitor.model.dto.FundDto;
 import com.financialtransactions.monitor.service.ExternalApiService;
 import com.financialtransactions.monitor.service.TradeService;

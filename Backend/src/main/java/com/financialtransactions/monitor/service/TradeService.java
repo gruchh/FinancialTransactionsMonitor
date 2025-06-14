@@ -6,7 +6,6 @@ import com.financialtransactions.monitor.model.Fund;
 import com.financialtransactions.monitor.model.Trade;
 import com.financialtransactions.monitor.model.dto.FundDto;
 import com.financialtransactions.monitor.model.dto.TradeDto;
-import com.financialtransactions.monitor.repository.FundRepository;
 import com.financialtransactions.monitor.repository.TradeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
