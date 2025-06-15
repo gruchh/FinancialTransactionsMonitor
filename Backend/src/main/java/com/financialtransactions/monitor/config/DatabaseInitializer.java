@@ -34,6 +34,7 @@ public class DatabaseInitializer {
         Trade trade1 = new Trade(
                 null,
                 fund1,
+                "trader1",
                 LocalDate.now(),
                 TradeType.BUY,
                 new BigDecimal("100.0000"),
@@ -48,6 +49,7 @@ public class DatabaseInitializer {
         Trade trade2 = new Trade(
                 null,
                 fund2,
+                "trader2",
                 LocalDate.now().minusDays(1),
                 TradeType.SELL,
                 new BigDecimal("50.0000"),
@@ -62,6 +64,7 @@ public class DatabaseInitializer {
         Trade trade3 = new Trade(
                 null,
                 fund3,
+                "trader1",
                 LocalDate.now().minusDays(2),
                 TradeType.BUY,
                 new BigDecimal("200.0000"),
