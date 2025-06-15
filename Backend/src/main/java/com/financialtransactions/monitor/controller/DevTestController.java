@@ -1,4 +1,4 @@
-package com.financialtransactions.monitor.security.controller;
+package com.financialtransactions.monitor.controller;
 
 import com.financialtransactions.monitor.service.ExternalApiService;
 import lombok.RequiredArgsConstructor;
