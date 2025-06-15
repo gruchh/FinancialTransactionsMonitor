@@ -2,10 +2,7 @@ package com.financialtransactions.monitor.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -15,6 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Getter
 @Setter
+@Builder
 @Entity
 @Table(name = "trades")
 public class Trade {
@@ -27,6 +25,10 @@ public class Trade {
     @JoinColumn(name = "fund_id")
     @NotNull
     private Fund fund;
+
+    @NotNull
+    @Column(name="owner_name")
+    private String ownerUsername;
 
     @NotNull
     @Column(name = "trade_date")

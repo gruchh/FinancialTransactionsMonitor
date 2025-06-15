@@ -1,1 +1,34 @@
+# Node modules
+node_modules/
+*/node_modules/
+**/node_modules/
+
+# Frontend specific
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+
+# Backend specific (Java)
+backend/target/
+backend/build/
+*.class
+*.jar
+*.war
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment variables
 .env
+.env.local
+.env.production

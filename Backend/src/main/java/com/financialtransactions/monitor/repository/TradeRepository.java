@@ -8,17 +8,23 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TradeRepository extends JpaRepository<Trade, Long> {
-    List<Trade> findByFundOrderByTradeDateDesc(Fund fund);
 
-    @Query("SELECT t FROM Trade t WHERE t.fund.id = :fundId ORDER BY t.tradeDate DESC")
-    List<Trade> findByFundIdOrderByTradeDateDesc(@Param("fundId") Long fundId);
+    List<Trade> findByFundAndOwnerUsernameOrderByTradeDateDesc(Fund fund, String ownerUsername);
 
-    @Query("SELECT t FROM Trade t ORDER BY t.tradeDate DESC")
-    List<Trade> findAllOrderByTradeDateDesc();
+    @Query("SELECT t FROM Trade t WHERE t.fund.id = :fundId AND t.ownerUsername = :ownerUsername ORDER BY t.tradeDate DESC")
+    List<Trade> findByFundIdAndOwnerUsernameOrderByTradeDateDesc(@Param("fundId") Long fundId, @Param("ownerUsername") String ownerUsername);
 
-    @Query("SELECT DISTINCT t.fund FROM Trade t")
-    List<Fund> findDistinctFunds();
+    @Query("SELECT t FROM Trade t WHERE t.ownerUsername = :ownerUsername ORDER BY t.tradeDate DESC")
+    List<Trade> findByOwnerUsernameOrderByTradeDateDesc(@Param("ownerUsername") String ownerUsername);
+
+    @Query("SELECT DISTINCT t.fund FROM Trade t WHERE t.ownerUsername = :ownerUsername")
+    List<Fund> findDistinctFundsByOwnerUsername(@Param("ownerUsername") String ownerUsername);
+
+    Optional<Trade> findByIdAndOwnerUsername(Long id, String ownerUsername);
+
+    List<Trade> findByOwnerUsername(String ownerUsername);
 }

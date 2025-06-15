@@ -1,43 +1,71 @@
 package com.financialtransactions.monitor.service;
 
+import com.financialtransactions.monitor.mapper.FundMapper;
+import com.financialtransactions.monitor.mapper.TradeMapper;
 import com.financialtransactions.monitor.model.Fund;
 import com.financialtransactions.monitor.model.Trade;
-import com.financialtransactions.monitor.repository.FundRepository;
+import com.financialtransactions.monitor.model.dto.FundDto;
+import com.financialtransactions.monitor.model.dto.TradeDto;
 import com.financialtransactions.monitor.repository.TradeRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
 public class TradeService {
 
     private final TradeRepository tradeRepository;
-    private final FundRepository fundRepository;
     private final ExternalApiService externalApiService;
+    private final TradeMapper tradeMapper;
+    private final FundMapper fundMapper;
 
-    public List<Trade> getAllTrades() {
-        return tradeRepository.findAllOrderByTradeDateDesc();
+    /**
+     * Pobiera aktualnie zalogowanego użytkownika z kontekstu Spring Security
+     */
+    private String getCurrentUsername() {
+        return SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
     }
 
-    public Optional<Trade> getTradeById(Long id) {
-        return tradeRepository.findById(id);
+    public List<Trade> getCurrentUserTrades() {
+        return tradeRepository.findByOwnerUsernameOrderByTradeDateDesc(getCurrentUsername());
     }
 
-    public List<Trade> getTradesByFund(Long fundId) {
-        return tradeRepository.findByFundIdOrderByTradeDateDesc(fundId);
+    public List<Trade> getCurrentUserTradesByFund(Fund fund) {
+        return tradeRepository.findByFundAndOwnerUsernameOrderByTradeDateDesc(fund, getCurrentUsername());
     }
 
-    public Trade saveTrade(Trade trade) {
-        // Get current exchange rates
+    public List<Trade> getCurrentUserTradesByFundId(Long fundId) {
+        return tradeRepository.findByFundIdAndOwnerUsernameOrderByTradeDateDesc(fundId, getCurrentUsername());
+    }
+
+    public List<Fund> getCurrentUserFunds() {
+        return tradeRepository.findDistinctFundsByOwnerUsername(getCurrentUsername());
+    }
+
+    public Trade getTradeById(Long tradeId) {
+        return tradeRepository.findByIdAndOwnerUsername(tradeId, getCurrentUsername())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Trade not found or access denied"));
+    }
+
+    public TradeDto saveTrade(TradeDto tradeDto) {
+        Trade trade = tradeMapper.toEntity(tradeDto);
+
+        trade.setOwnerUsername(getCurrentUsername());
+
         trade.setEurPlnRate(externalApiService.getEurPlnRate());
         trade.setUsdPlnRate(externalApiService.getUsdPlnRate());
 
-        // Calculate total value in PLN
         BigDecimal totalValue = trade.getPricePerUnit().multiply(trade.getQuantity());
         BigDecimal exchangeRate = BigDecimal.ONE;
 
@@ -52,19 +80,17 @@ public class TradeService {
         trade.setCreatedAt(LocalDateTime.now());
         trade.setUpdatedAt(LocalDateTime.now());
 
-        return tradeRepository.save(trade);
+        Trade savedTrade = tradeRepository.save(trade);
+        return tradeMapper.toDto(savedTrade);
     }
 
-    public Trade updateTrade(Long id, Trade tradeDetails) {
-        Trade trade = tradeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Trade not found with id " + id));
+    public TradeDto updateTrade(Long id, TradeDto tradeDto) {
+        Trade trade = getTradeById(id);
+        trade.setTradeDate(tradeDto.getTradeDate());
+        trade.setType(tradeDto.getType());
+        trade.setQuantity(tradeDto.getQuantity());
+        trade.setPricePerUnit(tradeDto.getPricePerUnit());
 
-        trade.setTradeDate(tradeDetails.getTradeDate());
-        trade.setType(tradeDetails.getType());
-        trade.setQuantity(tradeDetails.getQuantity());
-        trade.setPricePerUnit(tradeDetails.getPricePerUnit());
-
-        // Recalculate PLN value
         BigDecimal totalValue = trade.getPricePerUnit().multiply(trade.getQuantity());
         BigDecimal exchangeRate = BigDecimal.ONE;
 
@@ -78,14 +104,21 @@ public class TradeService {
         trade.setTotalValuePln(totalValue.multiply(exchangeRate));
         trade.setUpdatedAt(LocalDateTime.now());
 
-        return tradeRepository.save(trade);
+        Trade updatedTrade = tradeRepository.save(trade);
+        return tradeMapper.toDto(updatedTrade);
     }
 
     public void deleteTrade(Long id) {
-        tradeRepository.deleteById(id);
+        String currentUsername = getCurrentUsername();
+        Trade trade = tradeRepository.findByIdAndOwnerUsername(id, currentUsername)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Trade not found or access denied"));
+
+        tradeRepository.delete(trade);
     }
 
-    public List<Fund> getPortfolioFunds() {
-        return tradeRepository.findDistinctFunds();
+    public List<FundDto> getPortfolioFunds() {
+        return fundMapper.toDtoList(getCurrentUserFunds());
     }
 }

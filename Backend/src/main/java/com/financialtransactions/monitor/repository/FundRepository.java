@@ -8,7 +8,7 @@ import java.util.Optional;
 
 @Repository
 public interface FundRepository extends JpaRepository<Fund, Long> {
-    Optional<Fund> findBySymbol(String symbol);
 
+    Optional<Fund> findBySymbol(String symbol);
     boolean existsBySymbol(String symbol);
 }
