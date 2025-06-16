@@ -239,7 +239,6 @@ export const TradeForm = ({
                 </div>
               </div>
 
-              {/* Exchange Rates */}
               <AnimatedExchangeRates
                 currency={values.currency}
                 errors={errors}

@@ -13,7 +13,6 @@ function Navbar() {
       <nav className="bg-gray-800">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            {/* Logo */}
             <div className="flex items-center">
               <img
                 className="h-8 w-auto"
@@ -35,7 +34,6 @@ function Navbar() {
                 />
               </button>
 
-              {/* Mobile Menu Button */}
               <button
                 onClick={toggleMobileMenu}
                 className="md:hidden text-gray-400 hover:text-white p-2 rounded-md hover:bg-gray-700"
@@ -74,7 +72,6 @@ function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1">

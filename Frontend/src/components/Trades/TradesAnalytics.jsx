@@ -79,7 +79,6 @@ const TradesAnalytics = () => {
           Analiza Transakcji
         </h1>
 
-        {/* Statystyki ogólne */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow-lg border-l-4 border-blue-500">
             <h3 className="text-lg font-semibold text-gray-700">
@@ -114,7 +113,6 @@ const TradesAnalytics = () => {
           </div>
         </div>
 
-        {/* Nawigacja między wykresami */}
         <div className="flex space-x-4 mb-6">
           <button
             onClick={() => setActiveTab("timeline")}
@@ -148,7 +146,6 @@ const TradesAnalytics = () => {
           </button>
         </div>
 
-        {/* Wykresy */}
         <div className="bg-white p-6 rounded-lg shadow-lg">
           {activeTab === "timeline" && (
             <div>

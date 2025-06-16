@@ -1,4 +1,4 @@
-function Dashboard() {
+function WalletSummary() {
   return (
     <div className="w-full flex flex-col">
       <div className="p-6 bg-white">
@@ -25,7 +25,7 @@ function Dashboard() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default Dashboard;
+export default WalletSummary

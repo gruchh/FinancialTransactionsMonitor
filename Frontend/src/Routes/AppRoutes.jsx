@@ -1,21 +1,19 @@
 import { Route, Routes } from "react-router-dom";
-import App from "../App";
-import LoginPage from "../components/Auth/LoginPage";
-import Dashboard from "../components/Dashboard/Dashboard";
-import NotFound from "../components/NotFound/NotFound";
+import LoginPage from "../pages/Auth/LoginPage";
+import HomePage from "../pages/HomePage/HomePage";
+import NotFound from "../pages/NotFound/NotFound";
+import Dashboard from "../pages/Dashboard/Dashboard";
 import TradesList from "../components/Trades/TradesList";
-import TradesAnalytics from "../components/Trades/TradesAnalytics";
-import { TradeForm } from "../components/Trades/TradeForm/TradeForm";
+import WalletSummary from "../components/Dashboard/WalletSummary";
 
 function AppRoutes() {
   return (
-    <Routes>
+<Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route element={<App />}>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/trades" element={<TradesList />} />
-        <Route path="/trades/add" element={<TradeForm />} />
-        <Route path="/analytics" element={<TradesAnalytics/>} />
+      <Route path="/" element={<HomePage />} />
+      <Route path="/dashboard" element={<Dashboard />}>
+        <Route index element={<WalletSummary />} />
+        <Route path="trade" element={<TradesList />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

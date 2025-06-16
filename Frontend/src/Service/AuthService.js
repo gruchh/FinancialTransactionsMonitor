@@ -1,0 +1,5 @@
+import axios, { Axios } from "axios";
+
+export const login = async (data) => {
+  return await axios.post("http://localhost:8080/login", data)
+}
