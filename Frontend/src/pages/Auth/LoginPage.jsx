@@ -1,47 +1,48 @@
-import { useContext, useState } from "react";
 import { Mail } from "lucide-react";
-import InputField from "../../components/Login/InputField";
-import PasswordField from "../../components/Login/PasswordField";
-import CheckboxField from "../../components/Login/CheckboxField";
-import SubmitButton from "../../components/Login/SubmitButton";
-import LoginHeader from "../../components/Login/LoginHeader";
-import LoginFooter from "../../components/Login/LoginFooter";
-import StatusMessage from "../../components/Login/StatusMessage";
-import { validateLoginForm } from "../../components/Login/Validation/loginValidationSchema";
-import ForgotPasswordLink from "../../components/Login/ForgotPasswordLink";
+import { useContext, useState } from "react";
 import toast from "react-hot-toast";
-import { login } from "../../Service/AuthService";
 import { useNavigate } from "react-router-dom";
+import CheckboxField from "../../components/Login/CheckboxField";
+import ForgotPasswordLink from "../../components/Login/ForgotPasswordLink";
+import InputField from "../../components/Login/InputField";
+import LoginFooter from "../../components/Login/LoginFooter";
+import LoginHeader from "../../components/Login/LoginHeader";
+import PasswordField from "../../components/Login/PasswordField";
+import StatusMessage from "../../components/Login/StatusMessage";
+import SubmitButton from "../../components/Login/SubmitButton";
+import { validateLoginForm } from "../../components/Login/Validation/loginValidationSchema";
 import { AppContext } from "../../context/AppContext";
+import { login } from "../../service/AuthService";
 
 const LoginPage = () => {
   const { setAuthData } = useContext(AppContext);
-  
-  const navigate = useNavigate(); 
+
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
-    rememberMe: false
-  }); 
+    rememberMe: false,
+  });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState(null);
 
   const handleDataChange = (e) => {
     const name = e.target.name;
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    const value =
+      e.target.type === "checkbox" ? e.target.checked : e.target.value;
     console.log("Input changed:", e.target.value);
     console.log(formData);
-    
+
     setFormData((data) => ({
       ...data,
       [name]: value,
     }));
 
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ""
+        [name]: "",
       }));
     }
   };
@@ -54,50 +55,23 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // if (!validateForm()) {
-    //   console.log("Formularz zawiera błędy:", errors);
-    //   return;
-    // }
+
+    if (!validateForm()) {
+      console.log("Formularz zawiera błędy:", errors);
+      return;
+    }
 
     setIsSubmitting(true);
-    setStatus(null);
-
     try {
-      console.log("Próba wysłania formularza z danymi:", formData);
-      const response = await login(formData);
-      if(response.status === 200) {
-        setAuthData(response.data.token, response.data.role);
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("role", response.data.role);
-        // Removed duplicate login call
-        toast.success("Zalogowano pomyślnie!");
-        setStatus({ type: "success", message: "Logowanie pomyślne!" });
-        navigate("/dashboard");
-        console.log("Logowanie udane:", response.data);
-      }
+      const result = await login({
+        username: formData.username,
+        password: formData.password,
+      });
+      setAuthData(result);
+      toast.success("Zalogowano pomyślnie!");
+      navigate("/dashboard");
     } catch (error) {
-      let errorMessage = "Wystąpił błąd podczas logowania. Spróbuj ponownie.";
-      
-      if (error.response) {
-        // Backend zwrócił błąd
-        switch (error.response.status) {
-          case 401:
-            errorMessage = "Nieprawidłowe dane logowania.";
-            break;
-          case 404:
-            errorMessage = "Użytkownik nie istnieje.";
-            break;
-          case 500:
-            errorMessage = "Błąd serwera. Spróbuj ponownie później.";
-            break;
-          default:
-            errorMessage = error.response.data?.message || errorMessage;
-        }
-      } else if (error.request) {
-        errorMessage = "Brak połączenia z serwerem. Sprawdź połączenie internetowe.";
-      }
-      
+      const errorMessage = error.message || "Wystąpił błąd podczas logowania";
       setStatus({ type: "error", message: errorMessage });
       toast.error(errorMessage);
     } finally {
@@ -120,11 +94,11 @@ const LoginPage = () => {
             id="username"
             name="username"
             type="text"
-            value={formData.login}
+            value={formData.username}
             placeholder="Wprowadź nazwę użytkownika"
             label="Login"
             icon={Mail}
-            error={errors.login}
+            error={errors.username}
             onChange={handleDataChange}
           />
 

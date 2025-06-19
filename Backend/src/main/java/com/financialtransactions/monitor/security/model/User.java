@@ -2,7 +2,9 @@ package com.financialtransactions.monitor.security.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity(name = "users")
@@ -25,6 +27,13 @@ public class User {
 
     @Column(nullable = false, unique = true)
     private String email;
+
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)

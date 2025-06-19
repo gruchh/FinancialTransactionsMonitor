@@ -31,6 +31,7 @@ public class DataInitializer {
                     .username("admin")
                     .password(passwordEncoder.encode("admin"))
                     .email("admin@example.com")
+                    .avatarUrl("https://ui-avatars.com/api/?name=Administrator+System&background=0d47a1&color=fff")
                     .roles(Set.of(Role.ADMIN, Role.TRADER))
                     .build();
 
@@ -45,6 +46,7 @@ public class DataInitializer {
                     .username("trader")
                     .password(passwordEncoder.encode("trader"))
                     .email("trader@example.com")
+                    .avatarUrl("https://ui-avatars.com/api/?name=Jan+Kowalski&background=2e7d32&color=fff")
                     .roles(Set.of(Role.TRADER))
                     .build();
 
@@ -53,13 +55,11 @@ public class DataInitializer {
         } else {
             log.info("Użytkownik trader już istnieje");
         }
-
-        if (!usersToCreate.isEmpty()) {
+        try {
             userRepository.saveAll(usersToCreate);
-            log.info("Zapisano {} użytkowników do bazy danych", usersToCreate.size());
-        } else {
-            log.info("Brak nowych użytkowników do utworzenia");
+            log.info("Inicjalizacja użytkowników zakończona");
+        } catch(Exception e) {
+            log.info("Błąd zapisu do bazy danych");
         }
-        log.info("Inicjalizacja użytkowników zakończona");
     }
 }

@@ -1,6 +1,7 @@
 import HomepageFeatures from './HomepageFeatures.jsx'
 
-function Features() {
+const Features = () => {
+  
   return (
       <section id="features" className="px-6 py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto">

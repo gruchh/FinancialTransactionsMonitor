@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { sidebarItems } from "./SidebarItems";
+import { useAppContext } from "../../context/AppContext";
 
-function Sidebar() {
+const Sidebar = () => {
   const navigate = useNavigate();
+  const { logout } = useAppContext();
 
   const handleNavigation = (itemName) => {
     switch (itemName) {
@@ -10,18 +12,16 @@ function Sidebar() {
         navigate("/");
         break;
       case "Add new":
-        navigate("/trades/add");
+        navigate("/dashboard/trades/add");
         break;
       case "Analytics":
-        navigate("/analytics");
+        navigate("trades/analytics");
         break;
       case "Trades":
-        navigate("/trades");
-        break;
-      case "Login":
-        navigate("/login");
+        navigate("/dashboard/trades");
         break;
       case "Logout":
+        logout();
         navigate("/");
         break;
       default:

@@ -5,8 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -17,10 +16,9 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class JwtService {
-
-    private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
 
     @Value("${jwt.token.secretKey}")
     private String secretkey;
@@ -31,10 +29,10 @@ public class JwtService {
     @PostConstruct
     public void init() {
         if (secretkey == null || secretkey.length() < 32) {
-            logger.info("Wczytany klucz JWT: {}", secretkey);
+            log.info("Wczytany klucz JWT: {}", secretkey);
             throw new IllegalStateException("Klucz JWT musi mieć co najmniej 32 znaki dla HS256");
         }
-        logger.info("JwtService zainicjalizowany z kluczem o długości {} znaków", secretkey.length());
+        log.info("JwtService zainicjalizowany z kluczem o długości {} znaków", secretkey.length());
     }
 
     public String generateToken(String username, String email, Set<Role> roles) {
@@ -55,7 +53,7 @@ public class JwtService {
 
     private SecretKey getKey() {
         byte[] keyBytes = secretkey.getBytes(StandardCharsets.UTF_8);
-        logger.debug("Pobieranie klucza JWT, długość: {} bajtów", keyBytes.length);
+        log.debug("Pobieranie klucza JWT, długość: {} bajtów", keyBytes.length);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
@@ -95,7 +93,7 @@ public class JwtService {
                     .parseSignedClaims(token)
                     .getPayload();
         } catch (Exception e) {
-            logger.error("Błąd podczas parsowania tokenu JWT: {}", e.getMessage());
+            log.error("Błąd podczas parsowania tokenu JWT: {}", e.getMessage());
             throw new RuntimeException("Nieprawidłowy token JWT", e);
         }
     }
@@ -105,7 +103,17 @@ public class JwtService {
             final String userName = extractUsername(token);
             return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
         } catch (Exception e) {
-            logger.error("Błąd walidacji tokenu JWT: {}", e.getMessage());
+            log.error("Błąd walidacji tokenu JWT: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean isTokenValid(String token, String username) {
+        try {
+            final String extractedUsername = extractUsername(token);
+            return (extractedUsername.equals(username) && !isTokenExpired(token));
+        } catch (Exception e) {
+            log.error("Błąd walidacji tokenu JWT dla użytkownika {}: {}", username, e.getMessage());
             return false;
         }
     }
@@ -133,7 +141,7 @@ public class JwtService {
         try {
             return !isTokenExpired(token);
         } catch (Exception e) {
-            logger.error("Błąd sprawdzania ważności tokenu JWT: {}", e.getMessage());
+            log.error("Błąd sprawdzania ważności tokenu JWT: {}", e.getMessage());
             return false;
         }
     }

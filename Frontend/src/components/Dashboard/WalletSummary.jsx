@@ -1,4 +1,4 @@
-function WalletSummary() {
+const WalletSummary = () => {
   return (
     <div className="w-full flex flex-col">
       <div className="p-6 bg-white">
