@@ -65,7 +65,7 @@ public class SecurityController {
         }
     }
 
-    @GetMapping("/*")
+    @GetMapping("/getCurrentUser")
     public ResponseEntity<UserMeResponse> getCurrentUser(HttpServletRequest request) {
         log.info("Przetwarzanie żądania getCurrentUser");
         try {

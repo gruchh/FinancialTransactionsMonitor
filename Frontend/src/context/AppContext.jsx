@@ -1,135 +1,128 @@
-import { createContext, useState, useEffect, useContext } from "react";
-import { 
-  getStoredUserData, 
-  getStoredToken, 
-  logout as authLogout,
-  login as authLogin 
-} from "../service/AuthService";
+import { createContext, useContext, useEffect, useState } from "react";
+import { getStoredToken, getStoredUserData, login as authLogin } from "../service/AuthService";
 
 export const AppContext = createContext(null);
 
 export const useAppContext = () => {
-  return useContext(AppContext);
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error('useAppContext must be used within an AppContextProvider');
+  }
+  return context;
 };
 
 const AppContextProvider = ({ children }) => {
-  const [auth, setAuth] = useState({
-    token: null,
+  const [authData, setAuthData] = useState({
     user: null,
+    accessToken: null,
+    refreshToken: null,
     isAuthenticated: false,
     isLoading: true,
   });
 
   useEffect(() => {
-    const initializeAuth = () => {
+    const initializeSession = async () => {
       try {
         const token = getStoredToken();
-        const userData = getStoredUserData();
-
-        if (token && userData) {
-          setAuth({
-            token,
-            user: userData,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-        } else {
-          setAuth({
-            token: null,
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-          });
+        if (token) {
+          const userData = await getStoredUserData();
+          if (userData) {
+            setAuthData((prev) => ({
+              ...prev,
+              user: userData,
+              accessToken: token,
+              isAuthenticated: true,
+            }));
+          } else {
+            localStorage.removeItem("token");
+          }
         }
       } catch (error) {
-        console.error("Błąd inicjalizacji autoryzacji:", error);
-        setAuth({
-          token: null,
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-        });
+        console.error("Session initialization failed:", error);
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+      } finally {
+        setAuthData((prev) => ({ ...prev, isLoading: false }));
       }
     };
-
-    initializeAuth();
+    initializeSession();
   }, []);
 
-  const login = async (credentials) => {
+  const setAuthDataExternal = (data) => {
+    if (data.token || data.accessToken) {
+      const token = data.token || data.accessToken;
+      localStorage.setItem("token", token);
+    }
+    
+    if (data.refreshToken) {
+      localStorage.setItem("refreshToken", data.refreshToken);
+    }
+
+    setAuthData((prev) => ({
+      ...prev,
+      user: data.user || prev.user,
+      accessToken: data.token || data.accessToken || prev.accessToken,
+      refreshToken: data.refreshToken || prev.refreshToken,
+      isAuthenticated: !!(data.token || data.accessToken || prev.accessToken),
+    }));
+  };
+
+  const loginUser = async (username, password) => {
     try {
-      setAuth(prev => ({ ...prev, isLoading: true }));
-
-      const userData = await authLogin(credentials);
-      const token = getStoredToken();
-
-      setAuth({
-        token,
+      setAuthData((prev) => ({ ...prev, isLoading: true }));
+      const result = await authLogin({ username, password });
+      if (result.token) {
+        localStorage.setItem("token", result.token);
+      }
+      const userData = await getStoredUserData();
+      if (!userData) {
+        throw new Error("Failed to fetch user data");
+      }
+      setAuthData((prev) => ({
+        ...prev,
         user: userData,
+        accessToken: result.token,
+        refreshToken: result.refreshToken,
         isAuthenticated: true,
         isLoading: false,
-      });
-
-      return userData;
+      }));
+      
+      return { success: true, user: userData };
     } catch (error) {
-      setAuth({
-        token: null,
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
-      throw error;
+      setAuthData((prev) => ({ ...prev, isLoading: false }));
+      return { success: false, message: error.message || "Login failed" };
     }
   };
 
-  const setAuthData = (token, roles, additionalUserData = {}) => {
-    const userData = {
-      roles,
-      ...additionalUserData
-    };
-
-    setAuth({
-      token,
-      user: userData,
-      isAuthenticated: true,
-      isLoading: false,
-    });
-  };
-
-  const logout = () => {
-    authLogout();
-    setAuth({
-      token: null,
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-    });
-  };
-
-  const getPrimaryRole = () => {
-    if (!auth.user?.roles || auth.user.roles.length === 0) return null;
-
-    const roleHierarchy = ["ADMIN", "TRADER"];
-    return auth.user.roles.find(role => roleHierarchy.includes(role)) || auth.user.roles[0];
+  const logout = async () => {
+    try {
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      setAuthData({
+        user: null,
+        accessToken: null,
+        refreshToken: null,
+        isAuthenticated: false,
+        isLoading: false,
+      });
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   const contextValue = {
-    auth,    
-    login,
+    user: authData.user,
+    accessToken: authData.accessToken,
+    refreshToken: authData.refreshToken,
+    isAuthenticated: authData.isAuthenticated,
+    isLoading: authData.isLoading,
+    setAuthData: setAuthDataExternal,
+    login: loginUser,
     logout,
-    setAuthData,
-    getPrimaryRole, 
-    isAuthenticated: auth.isAuthenticated,
-    isLoading: auth.isLoading,
-    user: auth.user,
-    token: auth.token,
-    roles: auth.user?.roles || [],
-    primaryRole: getPrimaryRole(),
   };
 
   return (
-    <AppContext.Provider value={contextValue}>
-      {children}
-    </AppContext.Provider>
+    <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>
   );
 };
 

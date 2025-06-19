@@ -16,32 +16,33 @@ import { login } from "../../service/AuthService";
 
 const LoginPage = () => {
   const { setAuthData } = useContext(AppContext);
-  
-  const navigate = useNavigate(); 
+
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
-    rememberMe: false
-  }); 
+    rememberMe: false,
+  });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState(null);
 
   const handleDataChange = (e) => {
     const name = e.target.name;
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    const value =
+      e.target.type === "checkbox" ? e.target.checked : e.target.value;
     console.log("Input changed:", e.target.value);
     console.log(formData);
-    
+
     setFormData((data) => ({
       ...data,
       [name]: value,
     }));
 
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ""
+        [name]: "",
       }));
     }
   };
@@ -52,61 +53,31 @@ const LoginPage = () => {
     return isValid;
   };
 
- 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  if (!validateForm()) {
-    console.log("Formularz zawiera błędy:", errors);
-    return;
-  }
-  
-  setIsSubmitting(true);
-  setStatus(null);
-  
-  try {
-    console.log("Próba wysłania formularza z danymi:", formData);
-    const response = await login(formData);
-    console.log("Odpowiedź z serwera:", response);
-    
-    if (response.status === "success") {
-      console.log("Logowanie udane");
-      console.log(response.data);
-      
-      const { token, roles } = response.data;
-      console.log("ROLES: ",roles);
-      
-      console.log("token: ",token);
+    if (!validateForm()) {
+      console.log("Formularz zawiera błędy:", errors);
+      return;
+    }
 
-      const userRoles = roles && roles.length > 0 ? roles : ["TRADER"];
-      const roleHierarchy = ["ADMIN", "TRADER"];
-
-      const primaryRole = userRoles.find(role => roleHierarchy.includes(role)) || userRoles[0];
-      
-      console.log("Role użytkownika:", userRoles);
-      console.log("Główna rola:", primaryRole);
-      
-      setAuthData(token, userRoles, response.data);
-      
-      localStorage.setItem("token", token);
-      localStorage.setItem("roles", JSON.stringify(userRoles));
-      localStorage.setItem("primaryRole", primaryRole);
-      
+    setIsSubmitting(true);
+    try {
+      const result = await login({
+        username: formData.username,
+        password: formData.password,
+      });
+      setAuthData(result);
       toast.success("Zalogowano pomyślnie!");
-      setStatus({ type: "success", message: "Logowanie pomyślne!" });
-      
       navigate("/dashboard");
-    }  
-  } catch (error) {
-    console.error("Błąd podczas logowania:", error);
-    const errorMessage = error.message;
-    setStatus({ type: "error", message: errorMessage });
-    toast.error(errorMessage);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+    } catch (error) {
+      const errorMessage = error.message || "Wystąpił błąd podczas logowania";
+      setStatus({ type: "error", message: errorMessage });
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">

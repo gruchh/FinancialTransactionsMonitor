@@ -1,11 +1,11 @@
 import { Outlet } from "react-router-dom";
-import Navbar from "../../components/Navigation/Navbar";
 import Sidebar from "../../components/Navigation/Sidebar";
+import Navigation from "../../components/Homepage/Navigation";
 
 function Dashboard() {
   return (
     <>
-      <Navbar />
+      <Navigation />
       <div className="h-screen grid grid-cols-12 bg-gray-100 m-0 overflow-hidden">
         <div className="col-span-3 h-full hidden md:block">
           <Sidebar />

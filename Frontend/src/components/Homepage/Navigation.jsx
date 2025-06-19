@@ -1,18 +1,95 @@
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAppContext } from "../../context/AppContext";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { isAuthenticated, user, logout, isLoading } = useAppContext();
 
   const handleLogin = () => {
     navigate("/login");
+    setIsMenuOpen(false); 
   };
 
   const handleRegister = () => {
     navigate("/register");
+    setIsMenuOpen(false); 
     console.log("Register clicked");
+  };
+
+  const handleDashboard = () => {
+    navigate("/dashboard");
+    setIsMenuOpen(false);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/"); 
+    setIsMenuOpen(false); 
+  };
+
+  const renderAuthButtons = (isMobile = false) => {
+    const baseClasses = isMobile 
+      ? "px-4 py-2 text-left transition-colors" 
+      : "px-4 py-2 transition-colors";
+    
+    const primaryButtonClasses = isMobile
+      ? "px-6 py-2 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-lg hover:from-gray-800 hover:to-black transition-all"
+      : "px-6 py-2 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-lg hover:from-gray-800 hover:to-black transition-all transform hover:scale-105 shadow-lg";
+
+      if (isLoading) {
+      return (
+        <div className={isMobile ? "flex flex-col space-y-4" : "flex items-center space-x-4"}>
+          <div className="animate-pulse bg-gray-300 rounded px-4 py-2 w-20 h-8"></div>
+          <div className="animate-pulse bg-gray-300 rounded px-6 py-2 w-28 h-8"></div>
+        </div>
+      );
+    }
+
+    if (isAuthenticated) {
+      return (
+        <div className={isMobile ? "flex flex-col space-y-4" : "flex items-center space-x-4"}>
+          <div className={isMobile ? "" : "flex items-center space-x-2 text-gray-600"}>
+            <User className="w-4 h-4" />
+            <span className="text-sm">
+              Witaj, {user?.username || user?.name || "Użytkowniku"}!
+            </span>
+          </div>
+          <button 
+            className={`${baseClasses} text-gray-600 hover:text-gray-800`}
+            onClick={handleDashboard}
+          >
+            Dashboard
+          </button>
+          <button 
+            className={`${baseClasses} text-red-600 hover:text-red-800 flex items-center space-x-1`}
+            onClick={handleLogout}
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Wyloguj się</span>
+          </button>
+        </div>
+      );
+    } else {
+      return (
+        <div className={isMobile ? "flex flex-col space-y-4" : "flex items-center space-x-4"}>
+          <button 
+            className={`${baseClasses} text-gray-600 hover:text-gray-800`}
+            onClick={handleLogin}
+          >
+            Zaloguj się
+          </button>
+          <button 
+            className={primaryButtonClasses}
+            onClick={handleRegister}
+          >
+            Zarejestruj się
+          </button>
+        </div>
+      );
+    }
   };
 
   return (
@@ -106,17 +183,12 @@ const Navigation = () => {
           </div>
         </div>
 
+        {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-8">
-          <div className="flex items-center space-x-4">
-            <button className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors" onClick={handleLogin}>
-              Zaloguj się
-            </button>
-            <button className="px-6 py-2 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-lg hover:from-gray-800 hover:to-black transition-all transform hover:scale-105 shadow-lg" onClick={handleLogin}>
-              Zarejestruj się
-            </button>
-          </div>
+          {renderAuthButtons(false)}
         </div>
 
+        {/* Mobile Menu Button */}
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           className="md:hidden text-gray-600"
@@ -129,22 +201,10 @@ const Navigation = () => {
         </button>
       </div>
 
+      {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md border-b border-gray-200 px-6 py-4 shadow-lg">
-          <div className="flex flex-col space-y-4">
-            <button
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors text-left"
-              onClick={handleLogin}
-            >
-              Zaloguj się
-            </button>
-            <button
-              className="px-6 py-2 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-lg hover:from-gray-800 hover:to-black transition-all"
-              nClick={handleRegister}
-            >
-              Zarejestruj się
-            </button>
-          </div>
+          {renderAuthButtons(true)}
         </div>
       )}
     </nav>

@@ -10,13 +10,13 @@ function Sidebar() {
         navigate("/");
         break;
       case "Add new":
-        navigate("/trades/add");
+        navigate("/dashboard/trades/add");
         break;
       case "Analytics":
-        navigate("/analytics");
+        navigate("trades/analytics");
         break;
       case "Trades":
-        navigate("/trades");
+        navigate("/dashboard/trades");
         break;
       case "Login":
         navigate("/login");
