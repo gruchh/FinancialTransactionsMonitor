@@ -5,26 +5,15 @@ import com.financialtransactions.monitor.security.dto.JwtAuthResponse;
 import com.financialtransactions.monitor.security.dto.RegisterRequest;
 import com.financialtransactions.monitor.security.dto.UserMeResponse;
 import com.financialtransactions.monitor.security.exception.ValidationException;
-import com.financialtransactions.monitor.security.mapper.UserResponseMapper;
-import com.financialtransactions.monitor.security.model.Role;
-import com.financialtransactions.monitor.security.model.User;
-import com.financialtransactions.monitor.security.service.JwtService;
 import com.financialtransactions.monitor.security.service.JwtTokenValidator;
 import com.financialtransactions.monitor.security.service.UserService;
-import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -33,9 +22,7 @@ import java.util.stream.Collectors;
 public class SecurityController {
 
     private final UserService userService;
-    private final JwtService jwtService;
     private final JwtTokenValidator jwtTokenValidator;
-    private final UserResponseMapper userResponseMapper;
 
     @PostMapping("/register")
     public ResponseEntity<JwtAuthResponse> register(@Valid @RequestBody RegisterRequest request) {

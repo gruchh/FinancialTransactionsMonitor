@@ -47,7 +47,7 @@ const TradesAnalytics = () => {
   }, []);
 
   const fundAnalysis = tradeItems.reduce((acc, trade) => {
-    const fundName = trade.fund.name.split(" ")[0]; // Pierwsza część nazwy
+    const fundName = trade.fund.name.split(" ")[0]; 
     const existing = acc.find((item) => item.name === fundName);
     if (existing) {
       existing.value += trade.totalValuePln;

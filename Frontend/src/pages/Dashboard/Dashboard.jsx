@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "../../components/Navigation/Sidebar";
 import Navigation from "../../components/Homepage/Navigation";
 
-function Dashboard() {
+const Dashboard = () => {
   return (
     <>
       <Navigation />
@@ -16,6 +16,6 @@ function Dashboard() {
       </div>
     </>
   );
-}
+};
 
 export default Dashboard;

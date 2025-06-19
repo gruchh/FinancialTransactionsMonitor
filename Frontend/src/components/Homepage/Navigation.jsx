@@ -10,7 +10,7 @@ const Navigation = () => {
 
   const handleLogin = () => {
     navigate("/login");
-    setIsMenuOpen(false); 
+    setIsMenuOpen(false);
   };
 
   const handleRegister = () => {
@@ -30,14 +30,19 @@ const Navigation = () => {
     setIsMenuOpen(false); 
   };
 
+  const navigateHome = () => {
+    navigate("/");
+    setIsMenuOpen(false);
+  }
+
   const renderAuthButtons = (isMobile = false) => {
     const baseClasses = isMobile 
       ? "px-4 py-2 text-left transition-colors" 
       : "px-4 py-2 transition-colors";
     
     const primaryButtonClasses = isMobile
-      ? "px-6 py-2 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-lg hover:from-gray-800 hover:to-black transition-all"
-      : "px-6 py-2 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-lg hover:from-gray-800 hover:to-black transition-all transform hover:scale-105 shadow-lg";
+      ? "px-6 py-2 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-lg hover:from-gray-800 hover:to-black transition-all cursor-pointer"
+      : "px-6 py-2 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-lg hover:from-gray-800 hover:to-black transition-all transform hover:scale-105 shadow-lg cursor-pointer";
 
       if (isLoading) {
       return (
@@ -54,17 +59,17 @@ const Navigation = () => {
           <div className={isMobile ? "" : "flex items-center space-x-2 text-gray-600"}>
             <User className="w-4 h-4" />
             <span className="text-sm">
-              Witaj, {user?.username || user?.name || "Użytkowniku"}!
+              Witaj, {user?.data?.username || user?.data?.name || "Użytkowniku"}!
             </span>
           </div>
           <button 
-            className={`${baseClasses} text-gray-600 hover:text-gray-800`}
+            className={`${baseClasses} text-gray-600 hover:text-gray-800 cursor-pointer`}
             onClick={handleDashboard}
           >
             Dashboard
           </button>
           <button 
-            className={`${baseClasses} text-red-600 hover:text-red-800 flex items-center space-x-1`}
+            className={`${baseClasses} text-red-600 hover:text-red-800 flex items-center space-x-1 cursor-pointer`}
             onClick={handleLogout}
           >
             <LogOut className="w-4 h-4" />
@@ -76,7 +81,7 @@ const Navigation = () => {
       return (
         <div className={isMobile ? "flex flex-col space-y-4" : "flex items-center space-x-4"}>
           <button 
-            className={`${baseClasses} text-gray-600 hover:text-gray-800`}
+            className={`${baseClasses} text-gray-600 hover:text-gray-800 cursor-pointer`}
             onClick={handleLogin}
           >
             Zaloguj się
@@ -95,7 +100,7 @@ const Navigation = () => {
   return (
     <nav className="relative z-50 px-6 py-4 bg-white/90 backdrop-blur-md border-b border-gray-300 shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 cursor-pointer" onClick={navigateHome}>
           <svg
             width="48"
             height="48"
@@ -175,20 +180,18 @@ const Navigation = () => {
               strokeDasharray="2,2"
             />
           </svg>
-          <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
+          <div >
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent" >
               FinancialTransactionsMonitor
             </h1>
             <p className="text-xs text-gray-500">Portfolio Management</p>
           </div>
         </div>
 
-        {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-8">
           {renderAuthButtons(false)}
         </div>
 
-        {/* Mobile Menu Button */}
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           className="md:hidden text-gray-600"
@@ -201,7 +204,6 @@ const Navigation = () => {
         </button>
       </div>
 
-      {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md border-b border-gray-200 px-6 py-4 shadow-lg">
           {renderAuthButtons(true)}

@@ -8,7 +8,7 @@ import WalletSummary from "../components/Dashboard/WalletSummary";
 import { TradeForm } from "../components/Trades/TradeForm/TradeForm";
 import TradesAnalytics from "../components/Trades/TradesAnalytics";
 
-function AppRoutes() {
+const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />

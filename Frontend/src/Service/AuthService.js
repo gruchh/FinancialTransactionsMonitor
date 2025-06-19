@@ -23,7 +23,7 @@ export const getStoredToken = () => {
 
 export const getStoredUserData = async () => {
   try {
-    const response = await api.get("/api/getCurrentUser");
+    const response = await api.get("/auth/getCurrentUser");
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: "Failed to fetch user data" };

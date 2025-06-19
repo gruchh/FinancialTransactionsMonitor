@@ -15,7 +15,6 @@ const AppContextProvider = ({ children }) => {
   const [authData, setAuthData] = useState({
     user: null,
     accessToken: null,
-    refreshToken: null,
     isAuthenticated: false,
     isLoading: true,
   });
@@ -25,26 +24,35 @@ const AppContextProvider = ({ children }) => {
       try {
         const token = getStoredToken();
         if (token) {
-          const userData = await getStoredUserData();
-          if (userData) {
-            setAuthData((prev) => ({
-              ...prev,
-              user: userData,
-              accessToken: token,
-              isAuthenticated: true,
-            }));
-          } else {
+          try {
+            const userData = await getStoredUserData();
+            if (userData) {
+              setAuthData((prev) => ({
+                ...prev,
+                user: userData,
+                accessToken: token,
+                isAuthenticated: true,
+              }));
+            } else {
+              setAuthData((prev) => ({
+                ...prev,
+                accessToken: token,
+                isAuthenticated: false,
+              }));
+            }
+          } catch (userDataError) {
+            console.error("Failed to get user data:", userDataError);
             localStorage.removeItem("token");
           }
         }
       } catch (error) {
         console.error("Session initialization failed:", error);
         localStorage.removeItem("token");
-        localStorage.removeItem("refreshToken");
       } finally {
         setAuthData((prev) => ({ ...prev, isLoading: false }));
       }
     };
+
     initializeSession();
   }, []);
 
@@ -53,16 +61,11 @@ const AppContextProvider = ({ children }) => {
       const token = data.token || data.accessToken;
       localStorage.setItem("token", token);
     }
-    
-    if (data.refreshToken) {
-      localStorage.setItem("refreshToken", data.refreshToken);
-    }
 
     setAuthData((prev) => ({
       ...prev,
       user: data.user || prev.user,
       accessToken: data.token || data.accessToken || prev.accessToken,
-      refreshToken: data.refreshToken || prev.refreshToken,
       isAuthenticated: !!(data.token || data.accessToken || prev.accessToken),
     }));
   };
@@ -71,22 +74,24 @@ const AppContextProvider = ({ children }) => {
     try {
       setAuthData((prev) => ({ ...prev, isLoading: true }));
       const result = await authLogin({ username, password });
+      
       if (result.token) {
         localStorage.setItem("token", result.token);
       }
+      
       const userData = await getStoredUserData();
       if (!userData) {
         throw new Error("Failed to fetch user data");
       }
+      
       setAuthData((prev) => ({
         ...prev,
         user: userData,
         accessToken: result.token,
-        refreshToken: result.refreshToken,
         isAuthenticated: true,
         isLoading: false,
       }));
-      
+             
       return { success: true, user: userData };
     } catch (error) {
       setAuthData((prev) => ({ ...prev, isLoading: false }));
@@ -97,11 +102,9 @@ const AppContextProvider = ({ children }) => {
   const logout = async () => {
     try {
       localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
       setAuthData({
         user: null,
         accessToken: null,
-        refreshToken: null,
         isAuthenticated: false,
         isLoading: false,
       });
@@ -113,7 +116,6 @@ const AppContextProvider = ({ children }) => {
   const contextValue = {
     user: authData.user,
     accessToken: authData.accessToken,
-    refreshToken: authData.refreshToken,
     isAuthenticated: authData.isAuthenticated,
     isLoading: authData.isLoading,
     setAuthData: setAuthDataExternal,
