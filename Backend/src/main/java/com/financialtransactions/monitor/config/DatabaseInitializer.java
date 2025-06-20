@@ -1,83 +1,147 @@
 package com.financialtransactions.monitor.config;
 
-import com.financialtransactions.monitor.model.Fund;
-import com.financialtransactions.monitor.model.Trade;
-import com.financialtransactions.monitor.model.TradeType;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import com.financialtransactions.monitor.model.*;
+import com.financialtransactions.monitor.repository.FundRepository;
+import com.financialtransactions.monitor.repository.PortfolioRepository;
+import com.financialtransactions.monitor.repository.TradeRepository;
+import com.financialtransactions.monitor.security.model.User;
+import com.financialtransactions.monitor.security.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class DatabaseInitializer {
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final PortfolioRepository portfolioRepository;
+    private final TradeRepository tradeRepository;
+    private final FundRepository fundRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     @EventListener(ApplicationReadyEvent.class)
     public void initDatabase() {
-        Fund fund1 = new Fund(null, "AAPL", "Apple Inc.", "USD", "NASDAQ", "Technologia", new BigDecimal("192.50"), LocalDateTime.now());
-        Fund fund2 = new Fund(null, "GOOGL", "Alphabet Inc.", "USD", "NASDAQ", "Technologia", new BigDecimal("172.30"), LocalDateTime.now());
-        Fund fund3 = new Fund(null, "PKO", "PKO Bank Polski", "PLN", "GPW", "Finanse", new BigDecimal("56.75"), LocalDateTime.now());
 
-        entityManager.persist(fund1);
-        entityManager.persist(fund2);
-        entityManager.persist(fund3);
+        User user1 = User.builder()
+                .username("trader1")
+                .email("trader1@example.com")
+                .password(passwordEncoder.encode("password123"))
+                .build();
 
-        Trade trade1 = new Trade(
-                null,
-                fund1,
-                "trader1",
-                LocalDate.now(),
-                TradeType.BUY,
-                new BigDecimal("100.0000"),
-                new BigDecimal("192.50"),
-                new BigDecimal("4.25"),
-                new BigDecimal("3.95"),
-                new BigDecimal("19250.00"),
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
+        User user2 = User.builder()
+                .username("trader2")
+                .email("trader2@example.com")
+                .password(passwordEncoder.encode("password123"))
+                .build();
 
-        Trade trade2 = new Trade(
-                null,
-                fund2,
-                "trader2",
-                LocalDate.now().minusDays(1),
-                TradeType.SELL,
-                new BigDecimal("50.0000"),
-                new BigDecimal("172.30"),
-                new BigDecimal("4.25"),
-                new BigDecimal("3.95"),
-                new BigDecimal("8615.00"),
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
+        userRepository.saveAll(List.of(user1, user2));
 
-        Trade trade3 = new Trade(
-                null,
-                fund3,
-                "trader1",
-                LocalDate.now().minusDays(2),
-                TradeType.BUY,
-                new BigDecimal("200.0000"),
-                new BigDecimal("56.75"),
-                null,
-                null,
-                new BigDecimal("11350.00"),
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
+        Portfolio portfolio1 = Portfolio.builder()
+                .user(user1)
+                .currency(CurrencyType.USD)
+                .name("USD Portfolio - Trader1")
+                .description("Default USD portfolio for trader1")
+                .isActive(true)
+                .build();
 
-        entityManager.persist(trade1);
-        entityManager.persist(trade2);
-        entityManager.persist(trade3);
+        Portfolio portfolio2 = Portfolio.builder()
+                .user(user2)
+                .currency(CurrencyType.USD)
+                .name("USD Portfolio - Trader2")
+                .description("Default USD portfolio for trader2")
+                .isActive(true)
+                .build();
+
+        Portfolio portfolio3 = Portfolio.builder()
+                .user(user1)
+                .currency(CurrencyType.PLN)
+                .name("PLN Portfolio - Trader1")
+                .description("Default PLN portfolio for trader1")
+                .isActive(true)
+                .build();
+
+        portfolioRepository.saveAll(List.of(portfolio1, portfolio2, portfolio3));
+
+        Fund fund1 = Fund.builder()
+                .symbol("AAPL")
+                .name("Apple Inc.")
+                .market("Stock Market")
+                .currency("USD")
+                .sector("Technology")
+                .exchange("NASDAQ")
+                .currentPrice(new BigDecimal("192.50"))
+                .build();
+
+        Fund fund2 = Fund.builder()
+                .symbol("GOOGL")
+                .name("Alphabet Inc.")
+                .market("Stock Market")
+                .currency("USD")
+                .sector("Technology")
+                .exchange("NASDAQ")
+                .currentPrice(new BigDecimal("172.30"))
+                .build();
+
+        Fund fund3 = Fund.builder()
+                .symbol("PKO")
+                .name("PKO Bank Polski")
+                .market("Stock Market")
+                .currency("PLN")
+                .sector("Banking")
+                .exchange("WSE")
+                .currentPrice(new BigDecimal("56.75"))
+                .build();
+
+        fundRepository.saveAll(List.of(fund1, fund2, fund3));
+
+        Trade trade1 = Trade.builder()
+                .portfolio(portfolio1)
+                .fund(fund1)
+                .tradeDate(LocalDate.now())
+                .type(TradeType.BUY)
+                .quantity(new BigDecimal("100.0000"))
+                .pricePerUnit(new BigDecimal("192.50"))
+                .eurPlnRate(new BigDecimal("4.25"))
+                .usdPlnRate(new BigDecimal("3.95"))
+                .totalValuePln(new BigDecimal("19250.00"))
+                .totalValuePortfolioCurrency(new BigDecimal("19250.00"))
+                .build();
+
+        Trade trade2 = Trade.builder()
+                .portfolio(portfolio2)
+                .fund(fund2)
+                .tradeDate(LocalDate.now().minusDays(1))
+                .type(TradeType.BUY)
+                .quantity(new BigDecimal("50.0000"))
+                .pricePerUnit(new BigDecimal("172.30"))
+                .eurPlnRate(new BigDecimal("4.25"))
+                .usdPlnRate(new BigDecimal("3.95"))
+                .totalValuePln(new BigDecimal("8615.00"))
+                .totalValuePortfolioCurrency(new BigDecimal("8615.00"))
+                .build();
+
+        Trade trade3 = Trade.builder()
+                .portfolio(portfolio3)
+                .fund(fund3)
+                .tradeDate(LocalDate.now().minusDays(2))
+                .type(TradeType.BUY)
+                .quantity(new BigDecimal("200.0000"))
+                .pricePerUnit(new BigDecimal("56.75"))
+                .eurPlnRate(null)
+                .usdPlnRate(null)
+                .totalValuePln(new BigDecimal("11350.00"))
+                .totalValuePortfolioCurrency(new BigDecimal("11350.00"))
+                .build();
+
+        tradeRepository.saveAll(List.of(trade1, trade2, trade3));
     }
 }
