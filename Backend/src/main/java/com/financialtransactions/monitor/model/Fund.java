@@ -3,6 +3,8 @@ package com.financialtransactions.monitor.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,23 +23,37 @@ public class Fund {
     private Long id;
 
     @NotBlank
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String symbol;
 
     @NotBlank
+    @Column(nullable = false)
     private String name;
 
     @NotBlank
+    @Column(nullable = false)
     private String currency;
 
     @NotBlank
+    @Column(nullable = false)
     private String market;
 
+    @NotBlank
+    @Column(nullable = false)
     private String sector;
+
+    @NotBlank
+    @Column(name = "exchange", nullable = false)
+    private String exchange;
 
     @Column(name = "current_price", precision = 10, scale = 4)
     private BigDecimal currentPrice;
 
-    @Column(name = "last_updated")
-    private LocalDateTime lastUpdated;
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

@@ -13,18 +13,21 @@ import java.util.Optional;
 @Repository
 public interface TradeRepository extends JpaRepository<Trade, Long> {
 
-    List<Trade> findByFundAndOwnerUsernameOrderByTradeDateDesc(Fund fund, String ownerUsername);
+    @Query("SELECT t FROM Trade t WHERE t.fund = :fund AND t.portfolio.user.id = :userId ORDER BY t.tradeDate DESC")
+    List<Trade> findByFundAndPortfolioUserIdOrderByTradeDateDesc(@Param("fund") Fund fund, @Param("userId") Long userId);
 
-    @Query("SELECT t FROM Trade t WHERE t.fund.id = :fundId AND t.ownerUsername = :ownerUsername ORDER BY t.tradeDate DESC")
-    List<Trade> findByFundIdAndOwnerUsernameOrderByTradeDateDesc(@Param("fundId") Long fundId, @Param("ownerUsername") String ownerUsername);
+    @Query("SELECT t FROM Trade t WHERE t.fund.id = :fundId AND t.portfolio.user.id = :userId ORDER BY t.tradeDate DESC")
+    List<Trade> findByFundIdAndPortfolioUserIdOrderByTradeDateDesc(@Param("fundId") Long fundId, @Param("userId") Long userId);
 
-    @Query("SELECT t FROM Trade t WHERE t.ownerUsername = :ownerUsername ORDER BY t.tradeDate DESC")
-    List<Trade> findByOwnerUsernameOrderByTradeDateDesc(@Param("ownerUsername") String ownerUsername);
+    @Query("SELECT t FROM Trade t WHERE t.portfolio.user.id = :userId ORDER BY t.tradeDate DESC")
+    List<Trade> findByPortfolioUserIdOrderByTradeDateDesc(@Param("userId") Long userId);
 
-    @Query("SELECT DISTINCT t.fund FROM Trade t WHERE t.ownerUsername = :ownerUsername")
-    List<Fund> findDistinctFundsByOwnerUsername(@Param("ownerUsername") String ownerUsername);
+    @Query("SELECT DISTINCT t.fund FROM Trade t WHERE t.portfolio.user.id = :userId")
+    List<Fund> findDistinctFundsByPortfolioUserId(@Param("userId") Long userId);
 
-    Optional<Trade> findByIdAndOwnerUsername(Long id, String ownerUsername);
+    @Query("SELECT t FROM Trade t WHERE t.id = :id AND t.portfolio.user.id = :userId")
+    Optional<Trade> findByIdAndPortfolioUserId(@Param("id") Long id, @Param("userId") Long userId);
 
-    List<Trade> findByOwnerUsername(String ownerUsername);
+    @Query("SELECT t FROM Trade t WHERE t.portfolio.id = :portfolioId ORDER BY t.tradeDate DESC")
+    List<Trade> findByPortfolioIdOrderByTradeDateDesc(@Param("portfolioId") Long portfolioId);
 }
