@@ -43,10 +43,10 @@ public class JwtService {
                 .collect(Collectors.toSet()));
 
         return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(username)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + tokenDurationTime))
+                .claims(claims)
+                .subject(username)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + tokenDurationTime))
                 .signWith(getKey(), Jwts.SIG.HS256)
                 .compact();
     }
@@ -116,17 +116,6 @@ public class JwtService {
             log.error("Błąd walidacji tokenu JWT dla użytkownika {}: {}", username, e.getMessage());
             return false;
         }
-    }
-
-    public String refreshToken(String token) {
-        final Claims claims = extractAllClaims(token);
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(claims.getSubject())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + tokenDurationTime))
-                .signWith(getKey(), Jwts.SIG.HS256)
-                .compact();
     }
 
     public boolean isTokenExpired(String token) {

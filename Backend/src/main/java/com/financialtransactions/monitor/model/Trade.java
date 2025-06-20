@@ -3,6 +3,8 @@ package com.financialtransactions.monitor.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -22,28 +24,30 @@ public class Trade {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fund_id")
+    @JoinColumn(name = "portfolio_id", nullable = false)
+    @NotNull
+    private Portfolio portfolio;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "fund_id", nullable = false)
     @NotNull
     private Fund fund;
 
     @NotNull
-    @Column(name="owner_name")
-    private String ownerUsername;
-
-    @NotNull
-    @Column(name = "trade_date")
+    @Column(name = "trade_date", nullable = false)
     private LocalDate tradeDate;
 
     @NotNull
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private TradeType type;
 
     @NotNull
-    @Column(precision = 10, scale = 4)
+    @Column(precision = 10, scale = 4, nullable = false)
     private BigDecimal quantity;
 
     @NotNull
-    @Column(name = "price_per_unit", precision = 10, scale = 4)
+    @Column(name = "price_per_unit", precision = 10, scale = 4, nullable = false)
     private BigDecimal pricePerUnit;
 
     @Column(name = "eur_pln_rate", precision = 10, scale = 4)
@@ -55,9 +59,14 @@ public class Trade {
     @Column(name = "total_value_pln", precision = 12, scale = 2)
     private BigDecimal totalValuePln;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "total_value_portfolio_currency", precision = 12, scale = 2)
+    private BigDecimal totalValuePortfolioCurrency;
 
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 }

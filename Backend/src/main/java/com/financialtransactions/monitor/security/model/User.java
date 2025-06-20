@@ -1,10 +1,12 @@
 package com.financialtransactions.monitor.security.model;
 
+import com.financialtransactions.monitor.model.Portfolio;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Entity(name = "users")
@@ -43,4 +45,7 @@ public class User {
     )
     @Column(name = "role")
     private Set<Role> roles;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Portfolio> portfolios;
 }

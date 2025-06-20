@@ -16,6 +16,8 @@ import java.time.LocalDateTime;
 public class TradeDto {
 
     private Long id;
+
+    private PortfolioDto portfolio;
     private FundDto fund;
     private String ownerUsername;
 
@@ -23,11 +25,13 @@ public class TradeDto {
     private LocalDate tradeDate;
 
     private TradeType type;
+
     private BigDecimal quantity;
     private BigDecimal pricePerUnit;
     private BigDecimal eurPlnRate;
     private BigDecimal usdPlnRate;
     private BigDecimal totalValuePln;
+    private BigDecimal totalValuePortfolioCurrency;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;

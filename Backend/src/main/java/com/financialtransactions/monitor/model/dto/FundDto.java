@@ -19,6 +19,7 @@ public class FundDto {
     private String currency;
     private String market;
     private String sector;
+    private String exchange;
     private BigDecimal currentPrice;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
