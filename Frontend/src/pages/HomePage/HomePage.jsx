@@ -6,6 +6,8 @@ import Navigation from "../../components/Homepage/Navigation";
 import StatsSection from "../../components/Homepage/StatsSection";
 
 const HomePage = () => {
+
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 text-gray-800 overflow-x-hidden">
       <Navigation />

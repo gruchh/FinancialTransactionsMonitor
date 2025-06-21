@@ -21,9 +21,7 @@ const HeroSection = () => {
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
             <button className="px-8 py-4 border-2 border-white/70 text-white rounded-lg hover:bg-white/10 backdrop-blur-sm transition-all animate-fade-left animate-ease-in">
-              <span className="text-lg font-semibold">
-                Dowiedz się więcej
-              </span>
+              <span className="text-lg font-semibold">Dowiedz się więcej</span>
             </button>
           </div>
         </div>
