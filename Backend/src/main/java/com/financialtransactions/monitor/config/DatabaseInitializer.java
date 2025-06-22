@@ -4,6 +4,7 @@ import com.financialtransactions.monitor.model.*;
 import com.financialtransactions.monitor.repository.FundRepository;
 import com.financialtransactions.monitor.repository.PortfolioRepository;
 import com.financialtransactions.monitor.repository.TradeRepository;
+import com.financialtransactions.monitor.security.model.Role;
 import com.financialtransactions.monitor.security.model.User;
 import com.financialtransactions.monitor.security.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -32,15 +34,19 @@ public class DatabaseInitializer {
     public void initDatabase() {
 
         User user1 = User.builder()
-                .username("trader1")
+                .username("admin")
                 .email("trader1@example.com")
-                .password(passwordEncoder.encode("password123"))
+                .password(passwordEncoder.encode("admin"))
+                .avatarUrl("https://ui-avatars.com/api/?name=Administrator+System&background=0d47a1&color=fff")
+                .roles(Set.of(Role.ADMIN, Role.TRADER))
                 .build();
 
         User user2 = User.builder()
-                .username("trader2")
-                .email("trader2@example.com")
-                .password(passwordEncoder.encode("password123"))
+                .username("trader")
+                .password(passwordEncoder.encode("trader"))
+                .email("trader@example.com")
+                .avatarUrl("https://ui-avatars.com/api/?name=Jan+Kowalski&background=2e7d32&color=fff")
+                .roles(Set.of(Role.TRADER))
                 .build();
 
         userRepository.saveAll(List.of(user1, user2));

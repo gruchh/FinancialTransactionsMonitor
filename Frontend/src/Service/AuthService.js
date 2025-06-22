@@ -1,61 +1,42 @@
-import axios from "axios";
+import api from "./api";
 
-const api = axios.create({
-  baseURL: "http://localhost:8080",
-});
-
-api.interceptors.request.use(
-  (config) => {
-    const token = getStoredToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+export const authService = {
+  getCurrentUser: async () => {
+    try {
+      const response = await api.get("/auth/getCurrentUser");
+      return response.data;
+    } catch (error) {
+      console.error("getCurrentUser error:", error);
+      const errorData = error.response?.data;
+      const errorMessage =
+        errorData?.message || errorData?.error || "Failed to fetch user data";
+      throw new Error(errorMessage);
     }
-    return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
-export const getStoredToken = () => {
-  return localStorage.getItem("token");
+  login: async (credentials) => {
+    try {
+      const response = await api.post("/auth/login", credentials);
+      return response.data;
+    } catch (error) {
+      console.error("Login API error:", error);
+      const errorData = error.response?.data;
+      const errorMessage =
+        errorData?.message || errorData?.error || "Login failed";
+      throw new Error(errorMessage);
+    }
+  },
+
+  register: async (userData) => {
+    try {
+      const response = await api.post("/auth/register", userData);
+      return response.data;
+    } catch (error) {
+      console.error("Register API error:", error);
+      const errorData = error.response?.data;
+      const errorMessage =
+        errorData?.message || errorData?.error || "Registration failed";
+      throw new Error(errorMessage);
+    }
+  },
 };
-
-export const getStoredUserData = async () => {
-  try {
-    const response = await api.get("/auth/getCurrentUser");
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || { message: "Failed to fetch user data" };
-  }
-};
-
-export const login = async (credentials) => {
-  console.log("Login credentials:", credentials);
-  try {
-    const loginResponse = await api.post("/auth/login", credentials);
-    return loginResponse.data; 
-  } catch (error) {
-    throw error.response?.data || { message: "Login failed" };
-  }
-};
-
-export const register = async (userData) => {
-  try {
-    const registerResponse = await api.post("/auth/register", userData);
-    return registerResponse.data;
-  } catch (error) {
-    throw error.response?.data || { message: "Registration failed" };
-  }
-};
-
-export const getUser = async () => {
-  try {
-    const userResponse = await api.get("/api/user");
-    return userResponse.data;
-  } catch (error) {
-    throw error.response?.data || { message: "Failed to fetch user data" };
-  }
-};
-
-export default api;
