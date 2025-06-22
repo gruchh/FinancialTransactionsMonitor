@@ -2,6 +2,7 @@ package com.financialtransactions.monitor.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -30,9 +31,9 @@ public class Fund {
     @Column(nullable = false)
     private String name;
 
-    @NotBlank
+    @NotNull
     @Column(nullable = false)
-    private String currency;
+    private CurrencyType currencyType;
 
     @NotBlank
     @Column(nullable = false)

@@ -25,7 +25,6 @@ public class TradeDto {
     private LocalDate tradeDate;
 
     private TradeType type;
-
     private BigDecimal quantity;
     private BigDecimal pricePerUnit;
     private BigDecimal eurPlnRate;

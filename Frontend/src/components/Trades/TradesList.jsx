@@ -29,6 +29,19 @@ const TradesList = ({ onFundClick }) => {
     return new Date(dateString).toLocaleDateString('pl-PL');
   };
 
+  const getCurrencySymbol = (currencyType) => {
+    switch (currencyType) {
+      case 'EUR':
+        return 'EUR';
+      case 'USD':
+        return 'USD';
+      case 'PLN':
+        return 'PLN';
+      default:
+        return 'PLN'; // domyślnie PLN
+    }
+  };
+
   const handleFundClick = (fund) => {
     if (onFundClick && fund) {
       onFundClick(fund.id || fund.symbol);
@@ -37,7 +50,7 @@ const TradesList = ({ onFundClick }) => {
 
   const handleEdit = async (trade) => {
     try {
-      const updatedData = { ...trade }; // Placeholder, w aplikacji dane z formularza
+      const updatedData = { ...trade };
       const result = await updateTrade(trade.id, updatedData);
       if (!result.success) {
         console.error(result.message);
@@ -127,7 +140,10 @@ const TradesList = ({ onFundClick }) => {
                 {trade.quantity ? trade.quantity.toString() : 'N/A'}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {formatCurrency(trade.pricePerUnit)}
+                {trade.pricePerUnit ? 
+                  formatCurrency(trade.pricePerUnit, getCurrencySymbol(trade.currencyType))
+                  : 'N/A'
+                }
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {trade.eurPlnRate ? trade.eurPlnRate.toString() : 'N/A'}

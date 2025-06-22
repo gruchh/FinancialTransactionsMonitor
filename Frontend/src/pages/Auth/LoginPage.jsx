@@ -14,16 +14,15 @@ import { validateLoginForm } from "../../components/Login/Validation/loginValida
 import { useAuth } from "../../hooks/useAuth";
 
 const LoginPage = () => {
-  const { login } = useAuth();
+  const { login, isLoading, error, clearError } = useAuth();
   const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     username: "",
     password: "",
     rememberMe: false,
   });
   const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [status, setStatus] = useState(null);
 
   const handleDataChange = (e) => {
     const name = e.target.name;
@@ -40,6 +39,10 @@ const LoginPage = () => {
         [name]: "",
       }));
     }
+
+    if (error) {
+      clearError(); 
+    }
   };
 
   const validateForm = () => {
@@ -48,42 +51,34 @@ const LoginPage = () => {
     return isValid;
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!validateForm()) {
-    console.log("Formularz zawiera błędy:", errors);
-    return;
-  }
-
-  setIsSubmitting(true);
-  try {
-    console.log("Próba logowania z danymi:", formData);
-    const result = await login({
-      username: formData.username,
-      password: formData.password,
-    });
-    
-    console.log("Wynik logowania:", result);
-    
-    // Sprawdź czy logowanie się powiodło
-    if (result.success) {
-      console.log("Pobrane dane użytkownika:", result.user);
-      toast.success("Zalogowano pomyślnie!");
-      navigate("/dashboard");
-    } else {
-      // Logowanie nie powiodło się
-      throw new Error(result.message || "Logowanie nie powiodło się");
+    if (!validateForm()) {
+      console.log("Formularz zawiera błędy:", errors);
+      return;
     }
-  } catch (error) {
-    console.error("Błąd logowania:", error);
-    const errorMessage = error.message || "Wystąpił błąd podczas logowania";
-    setStatus({ type: "error", message: errorMessage });
-    toast.error(errorMessage);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+
+    try {
+      console.log("Próba logowania z danymi:", formData);
+      
+      const result = await login({
+        username: formData.username,
+        password: formData.password,
+      });
+      
+      if (result.success) {
+        console.log("Pobrane dane użytkownika:", result.user);
+        toast.success("Zalogowano pomyślnie!");
+        navigate("/dashboard");
+      } else {
+        toast.error(result.message || "Logowanie nie powiodło się");
+      }
+    } catch (error) {
+      console.error("Błąd logowania:", error);
+      toast.error("Wystąpił nieoczekiwany błąd");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
@@ -94,7 +89,11 @@ const handleSubmit = async (e) => {
         />
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <StatusMessage status={status} />
+          {error && (
+            <StatusMessage 
+              status={{ type: "error", message: error }} 
+            />
+          )}
 
           <InputField
             id="username"
@@ -129,7 +128,7 @@ const handleSubmit = async (e) => {
           </div>
 
           <SubmitButton
-            isSubmitting={isSubmitting}
+            isSubmitting={isLoading}
             loadingText="Logowanie..."
             onClick={handleSubmit}
           >

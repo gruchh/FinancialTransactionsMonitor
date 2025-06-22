@@ -1,6 +1,7 @@
 package com.financialtransactions.monitor.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.financialtransactions.monitor.model.CurrencyType;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -16,7 +17,7 @@ public class FundDto {
     private Long id;
     private String symbol;
     private String name;
-    private String currency;
+    private CurrencyType currencyType;
     private String market;
     private String sector;
     private String exchange;

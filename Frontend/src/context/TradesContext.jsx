@@ -20,6 +20,12 @@ export const TRADES_ACTIONS = {
   CLEAR_ERROR: "CLEAR_ERROR",
 };
 
+const initialState = {
+  trades: [],
+  loading: false,
+  error: null,
+};
+
 const tradesReducer = (state, action) => {
   switch (action.type) {
     case TRADES_ACTIONS.SET_LOADING:
@@ -58,11 +64,6 @@ const tradesReducer = (state, action) => {
   }
 };
 
-const initialState = {
-  trades: [],
-  loading: false,
-  error: null,
-};
 
 export const TradesProvider = ({ children }) => {
   const [state, dispatch] = useReducer(tradesReducer, initialState);

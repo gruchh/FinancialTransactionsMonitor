@@ -1,8 +1,6 @@
 package com.financialtransactions.monitor.controller;
 
-import com.financialtransactions.monitor.model.dto.FundDto;
 import com.financialtransactions.monitor.service.ExternalApiService;
-import com.financialtransactions.monitor.service.TradeService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -12,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -22,13 +19,7 @@ import java.util.Map;
 @Tag(name = "Portfolio", description = "API for managing portfolio-related operations")
 public class PortfolioController {
 
-    private final TradeService tradeService;
     private final ExternalApiService externalApiService;
-
-    @GetMapping("/funds")
-    public List<FundDto> getPortfolioFunds() {
-        return tradeService.getPortfolioFunds();
-    }
 
     @GetMapping("/rates")
     public Map<String, BigDecimal> getCurrentRates() {
