@@ -8,8 +8,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientConfig {
 
     @Bean
-    public WebClient webClient() {
-        return WebClient.builder().build();
+    public WebClient nbpWebClient() {
+        return WebClient.builder()
+                .baseUrl("https://api.nbp.pl/api/exchangerates/rates/a")
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(1024 * 1024))
+                .build();
     }
 
 }

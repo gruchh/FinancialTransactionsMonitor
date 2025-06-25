@@ -24,4 +24,16 @@ public class TradeWithCurrencyDto {
     private BigDecimal usdPlnRate;
     private BigDecimal totalValuePln;
     private CurrencyType currencyType;
+
+    private Long userId;
+    private String username;
+    private String userEmail;
+
+    private Long portfolioId;
+    private String portfolioName;
+    private CurrencyType portfolioCurrency;
+
+    private Long fundId;
+    private String fundName;
+    private String fundSymbol;
 }
