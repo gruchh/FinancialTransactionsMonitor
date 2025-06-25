@@ -1,5 +1,6 @@
 package com.financialtransactions.monitor.service;
 
+<<<<<<< HEAD
 import com.financialtransactions.monitor.model.dto.NbpExchangeRateResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -97,3 +98,7 @@ public class CurrencyExchangeService {
         return getExchangeRate("USD", date);
     }
 }
+=======
+public class CurrencyExchangeService {
+}
+>>>>>>> 2e3e4583de033bf4180a092d2deca7ba858b7a7e
