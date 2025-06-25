@@ -1,6 +1,5 @@
 package com.financialtransactions.monitor.model.dto;
 
-<<<<<<< HEAD
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,7 +21,7 @@ public class NbpExchangeRateResponse {
     private String code;
     private List<Rate> rates;
 
-    @Getterg
+    @Getter
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
@@ -36,8 +35,4 @@ public class NbpExchangeRateResponse {
         @JsonProperty("mid")
         private BigDecimal mid;
     }
-
-=======
-public class NbpExchangeRateResponse {
->>>>>>> 2e3e4583de033bf4180a092d2deca7ba858b7a7e
 }
