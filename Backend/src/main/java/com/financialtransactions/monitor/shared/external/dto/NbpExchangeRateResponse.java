@@ -35,5 +35,4 @@ public class NbpExchangeRateResponse {
         @JsonProperty("mid")
         private BigDecimal mid;
     }
-
 }
