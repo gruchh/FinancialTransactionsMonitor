@@ -1,9 +1,13 @@
 package com.financialtransactions.monitor.config;
 
-import com.financialtransactions.monitor.model.*;
-import com.financialtransactions.monitor.repository.FundRepository;
-import com.financialtransactions.monitor.repository.PortfolioRepository;
-import com.financialtransactions.monitor.repository.TradeRepository;
+import com.financialtransactions.monitor.domain.entity.Fund;
+import com.financialtransactions.monitor.domain.entity.Portfolio;
+import com.financialtransactions.monitor.domain.entity.Trade;
+import com.financialtransactions.monitor.domain.enums.CurrencyType;
+import com.financialtransactions.monitor.domain.enums.TradeType;
+import com.financialtransactions.monitor.modules.fund.repository.FundRepository;
+import com.financialtransactions.monitor.modules.portfolio.repository.PortfolioRepository;
+import com.financialtransactions.monitor.modules.trade.repository.TradeRepository;
 import com.financialtransactions.monitor.security.model.Role;
 import com.financialtransactions.monitor.security.model.User;
 import com.financialtransactions.monitor.security.repository.UserRepository;
