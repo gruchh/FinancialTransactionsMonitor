@@ -14,6 +14,7 @@ import com.financialtransactions.monitor.security.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 
 @Component
+@Profile("dev")
 @RequiredArgsConstructor
 public class DatabaseInitializer {
 
