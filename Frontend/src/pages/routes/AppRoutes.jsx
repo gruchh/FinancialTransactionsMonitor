@@ -1,12 +1,12 @@
 import { Route, Routes } from "react-router-dom";
-import LoginPage from "../pages/Auth/LoginPage";
-import HomePage from "../pages/HomePage/HomePage";
-import NotFound from "../pages/NotFound/NotFound";
-import Dashboard from "../pages/Dashboard/Dashboard";
-import TradesList from "../components/Trades/TradesList";
-import WalletSummary from "../components/Dashboard/WalletSummary";
-import { TradeForm } from "../components/Trades/TradeForm/TradeForm";
-import TradesAnalytics from "../components/Trades/TradesAnalytics";
+import LoginPage from "../Auth/LoginPage";
+import HomePage from "../HomePage/HomePage";
+import NotFound from "../NotFound/NotFound";
+import Dashboard from "../Dashboard/Dashboard";
+import WalletSummary from "../../components/Dashboard/WalletSummary";
+import TradesList from "../../components/Trade/TradesList";
+import { TradeForm } from "../../components/Trade/TradeForm/TradeForm";
+import TradesAnalytics from "../../components/Trade/TradesAnalytics";
 
 const AppRoutes = () => {
   return (

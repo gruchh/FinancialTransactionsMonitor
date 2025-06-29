@@ -115,4 +115,26 @@ public class TradeController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
         }
     }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete trade by ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Trade deleted successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Access denied to trade"),
+            @ApiResponse(responseCode = "404", description = "Trade not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<Void> deleteTrade(
+            @Parameter(description = "Trade ID", required = true)
+            @PathVariable Long id) {
+
+        if (id == null || id <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid trade ID");
+        }
+
+        tradeService.deleteTrade(id);
+        log.info("Trade with id {} deleted successfully", id);
+        return ResponseEntity.noContent().build();
+    }
 }

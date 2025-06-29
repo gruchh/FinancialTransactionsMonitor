@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer } from "react";
 
-const TradesContext = createContext();
+const TradesContext = createContext(null);
 
 export const useTradesContext = () => {
   const context = useContext(TradesContext);

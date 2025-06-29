@@ -10,8 +10,8 @@ import LoginHeader from "../../components/Login/LoginHeader";
 import PasswordField from "../../components/Login/PasswordField";
 import StatusMessage from "../../components/Login/StatusMessage";
 import SubmitButton from "../../components/Login/SubmitButton";
-import { validateLoginForm } from "../../components/Login/Validation/loginValidationSchema";
-import { useAuth } from "../../hooks/useAuth";
+import { validateLoginForm } from "../../utils/Validation/loginValidationSchema";
+import { useAuth } from "../../hooks";
 
 const LoginPage = () => {
   const { login, isLoading, error, clearError } = useAuth();
@@ -55,28 +55,23 @@ const LoginPage = () => {
     e.preventDefault();
 
     if (!validateForm()) {
-      console.log("Formularz zawiera błędy:", errors);
       return;
     }
 
     try {
-      console.log("Próba logowania z danymi:", formData);
-      
       const result = await login({
         username: formData.username,
         password: formData.password,
       });
       
       if (result.success) {
-        console.log("Pobrane dane użytkownika:", result.user);
         toast.success("Zalogowano pomyślnie!");
         navigate("/dashboard");
       } else {
         toast.error(result.message || "Logowanie nie powiodło się");
       }
     } catch (error) {
-      console.error("Błąd logowania:", error);
-      toast.error("Wystąpił nieoczekiwany błąd");
+      toast.error("Wystąpił nieoczekiwany błąd", error);
     }
   };
 

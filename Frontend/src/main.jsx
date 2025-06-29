@@ -4,8 +4,8 @@ import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import AppContextProvider from "./context/AppContext";
 import { Toaster } from "react-hot-toast";
-import AppRoutes from "./routes/AppRoutes";
 import { TradesProvider } from "./context/TradesContext";
+import AppRoutes from "./pages/routes/AppRoutes";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

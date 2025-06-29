@@ -1,6 +1,5 @@
-# Get script directory and project root
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$projectRoot = Split-Path -Parent $scriptDir
+$projectRoot = Split-Path -Parent (Split-Path -Parent $scriptDir)
 Push-Location $projectRoot
 
 function Load-EnvFile {
@@ -15,6 +14,7 @@ function Load-EnvFile {
                 $name = $name.Trim()
                 $value = $value.Trim()
                 
+                # Remove quotes if present
                 if ($value.StartsWith('"') -and $value.EndsWith('"')) {
                     $value = $value.Substring(1, $value.Length - 2)
                 }
@@ -86,10 +86,13 @@ try {
         Write-Host ""
         Write-Host "Starting application..." -ForegroundColor Cyan
         
+        # Start the Java application
         java -jar "target/$($jarFile.Name)" --spring.profiles.active=prod
         
     } else {
         Write-Host "❌ No executable JAR file found!" -ForegroundColor Red
+        
+        # Show all JAR files if any exist
         $allJars = Get-ChildItem -Path "target" -Filter "*.jar" -ErrorAction SilentlyContinue
         if ($allJars) {
             Write-Host "Available JAR files in target directory:" -ForegroundColor Cyan

@@ -96,9 +96,7 @@ const AppContextProvider = ({ children }) => {
         const token = getStoredToken();
         if (token) {
           try {
-            const userData = await authService.getCurrentUser();
-            console.log("User data fetched successfully:", userData);
-            
+            const userData = await authService.getCurrentUser();            
             if (userData) {
               dispatch({
                 type: AUTH_ACTIONS.LOGIN_SUCCESS,
@@ -143,11 +141,9 @@ const AppContextProvider = ({ children }) => {
 
   const loginUser = async (credentials) => {
     try {
-      console.log("Attempting to log in with:", credentials);
       dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
       
       const result = await authService.login(credentials);
-      console.log("Login result:", result);
       
       if (!result || (!result.token && !result.accessToken)) {
         throw new Error("No authentication token received");

@@ -2,7 +2,6 @@ $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectRoot = Split-Path -Parent $scriptDir
 Push-Location $projectRoot
 
-# Function to load .env file
 function Load-EnvFile {
     param([string]$EnvFile = ".env")
     
@@ -24,7 +23,6 @@ function Load-EnvFile {
 }
 
 try {
-    # Load .env file if it exists
     Load-EnvFile
     Write-Host "🚀 Starting Financial Transactions Monitor in PRODUCTION mode..." -ForegroundColor Green
     Write-Host "Make sure you have built the application first (mvn clean package)" -ForegroundColor Yellow
@@ -37,7 +35,6 @@ try {
         exit 1
     }
 
-    # Look for any executable JAR file (excluding sources and javadoc)
     $jarFiles = Get-ChildItem -Path "target" -Filter "*.jar" -ErrorAction SilentlyContinue |
                Where-Object { 
                    $_.Name -notlike "*sources*" -and 
@@ -72,7 +69,6 @@ try {
     } else {
         Write-Host "❌ No executable JAR file found!" -ForegroundColor Red
         
-        # Show all JAR files if any exist
         $allJars = Get-ChildItem -Path "target" -Filter "*.jar" -ErrorAction SilentlyContinue
         if ($allJars) {
             Write-Host "Available JAR files in target directory:" -ForegroundColor Cyan

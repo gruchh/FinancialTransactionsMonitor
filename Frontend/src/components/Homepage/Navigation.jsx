@@ -16,7 +16,6 @@ const Navigation = () => {
   const handleRegister = () => {
     navigate("/register");
     setIsMenuOpen(false);
-    console.log("Register clicked");
   };
 
   const handleDashboard = () => {

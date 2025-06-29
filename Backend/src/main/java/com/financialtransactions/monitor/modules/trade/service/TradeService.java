@@ -124,6 +124,22 @@ public class TradeService {
         return tradeRepository.save(trade);
     }
 
+    public void deleteTrade(Long id) {
+        User currentUser = getCurrentUser();
+        Trade trade = tradeRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Trade not found with id: " + id));
+        if (!trade.getPortfolio().getUser().getId().equals(currentUser.getId())) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Access denied to this trade");
+        }
+
+        log.info("Deleting trade with id: {} for user: {}",
+                id, currentUser.getUsername());
+
+        tradeRepository.delete(trade);
+    }
+
     private BigDecimal calculateTotalValueInPln(BigDecimal quantity, BigDecimal pricePerUnit,
                                                 CurrencyType currencyType, BigDecimal eurRate, BigDecimal usdRate) {
         BigDecimal totalValue = quantity.multiply(pricePerUnit);
