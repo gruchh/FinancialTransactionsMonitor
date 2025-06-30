@@ -4,9 +4,9 @@ import Footer from "../../components/Homepage/Footer.jsx";
 import HeroSection from "../../components/Homepage/HeroSection";
 import Navigation from "../../components/Homepage/Navigation";
 import StatsSection from "../../components/Homepage/StatsSection";
+import TradingPlatformsSection from "../../components/Homepage/TradingPlatformSections.jsx";
 
 const HomePage = () => {
-
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 text-gray-800 overflow-x-hidden">
@@ -15,6 +15,7 @@ const HomePage = () => {
       <StatsSection />
       <Features />
       <CTASection />
+      <TradingPlatformsSection />
       <Footer />
     </div>
   );

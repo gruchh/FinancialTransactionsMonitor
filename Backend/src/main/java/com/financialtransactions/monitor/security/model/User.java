@@ -1,6 +1,6 @@
 package com.financialtransactions.monitor.security.model;
 
-import com.financialtransactions.monitor.model.Portfolio;
+import com.financialtransactions.monitor.domain.entity.Portfolio;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

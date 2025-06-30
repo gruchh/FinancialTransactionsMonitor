@@ -1,5 +1,5 @@
 import { Mail } from "lucide-react";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import CheckboxField from "../../components/Login/CheckboxField";
@@ -10,29 +10,23 @@ import LoginHeader from "../../components/Login/LoginHeader";
 import PasswordField from "../../components/Login/PasswordField";
 import StatusMessage from "../../components/Login/StatusMessage";
 import SubmitButton from "../../components/Login/SubmitButton";
-import { validateLoginForm } from "../../components/Login/Validation/loginValidationSchema";
-import { AppContext } from "../../context/AppContext";
-import { login } from "../../service/AuthService";
+import { validateLoginForm } from "../../utils/Validation/loginValidationSchema";
+import { useAuth } from "../../hooks";
 
 const LoginPage = () => {
-  const { setAuthData } = useContext(AppContext);
-
+  const { login, isLoading, error, clearError } = useAuth();
   const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     username: "",
     password: "",
     rememberMe: false,
   });
   const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [status, setStatus] = useState(null);
 
   const handleDataChange = (e) => {
     const name = e.target.name;
-    const value =
-      e.target.type === "checkbox" ? e.target.checked : e.target.value;
-    console.log("Input changed:", e.target.value);
-    console.log(formData);
+    const value = e.target.value;
 
     setFormData((data) => ({
       ...data,
@@ -44,6 +38,10 @@ const LoginPage = () => {
         ...prev,
         [name]: "",
       }));
+    }
+
+    if (error) {
+      clearError(); 
     }
   };
 
@@ -57,25 +55,23 @@ const LoginPage = () => {
     e.preventDefault();
 
     if (!validateForm()) {
-      console.log("Formularz zawiera błędy:", errors);
       return;
     }
 
-    setIsSubmitting(true);
     try {
       const result = await login({
         username: formData.username,
         password: formData.password,
       });
-      setAuthData(result);
-      toast.success("Zalogowano pomyślnie!");
-      navigate("/dashboard");
+      
+      if (result.success) {
+        toast.success("Zalogowano pomyślnie!");
+        navigate("/dashboard");
+      } else {
+        toast.error(result.message || "Logowanie nie powiodło się");
+      }
     } catch (error) {
-      const errorMessage = error.message || "Wystąpił błąd podczas logowania";
-      setStatus({ type: "error", message: errorMessage });
-      toast.error(errorMessage);
-    } finally {
-      setIsSubmitting(false);
+      toast.error("Wystąpił nieoczekiwany błąd", error);
     }
   };
 
@@ -88,7 +84,11 @@ const LoginPage = () => {
         />
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <StatusMessage status={status} />
+          {error && (
+            <StatusMessage 
+              status={{ type: "error", message: error }} 
+            />
+          )}
 
           <InputField
             id="username"
@@ -123,7 +123,7 @@ const LoginPage = () => {
           </div>
 
           <SubmitButton
-            isSubmitting={isSubmitting}
+            isSubmitting={isLoading}
             loadingText="Logowanie..."
             onClick={handleSubmit}
           >

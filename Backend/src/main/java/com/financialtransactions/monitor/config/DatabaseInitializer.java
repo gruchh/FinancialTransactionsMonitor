@@ -1,14 +1,20 @@
 package com.financialtransactions.monitor.config;
 
-import com.financialtransactions.monitor.model.*;
-import com.financialtransactions.monitor.repository.FundRepository;
-import com.financialtransactions.monitor.repository.PortfolioRepository;
-import com.financialtransactions.monitor.repository.TradeRepository;
+import com.financialtransactions.monitor.domain.entity.Fund;
+import com.financialtransactions.monitor.domain.entity.Portfolio;
+import com.financialtransactions.monitor.domain.entity.Trade;
+import com.financialtransactions.monitor.domain.enums.CurrencyType;
+import com.financialtransactions.monitor.domain.enums.TradeType;
+import com.financialtransactions.monitor.modules.fund.repository.FundRepository;
+import com.financialtransactions.monitor.modules.portfolio.repository.PortfolioRepository;
+import com.financialtransactions.monitor.modules.trade.repository.TradeRepository;
+import com.financialtransactions.monitor.security.model.Role;
 import com.financialtransactions.monitor.security.model.User;
 import com.financialtransactions.monitor.security.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -16,8 +22,10 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Component
+@Profile("dev")
 @RequiredArgsConstructor
 public class DatabaseInitializer {
 
@@ -32,15 +40,19 @@ public class DatabaseInitializer {
     public void initDatabase() {
 
         User user1 = User.builder()
-                .username("trader1")
+                .username("admin")
                 .email("trader1@example.com")
-                .password(passwordEncoder.encode("password123"))
+                .password(passwordEncoder.encode("admin"))
+                .avatarUrl("https://ui-avatars.com/api/?name=Administrator+System&background=0d47a1&color=fff")
+                .roles(Set.of(Role.ADMIN, Role.TRADER))
                 .build();
 
         User user2 = User.builder()
-                .username("trader2")
-                .email("trader2@example.com")
-                .password(passwordEncoder.encode("password123"))
+                .username("trader")
+                .password(passwordEncoder.encode("trader"))
+                .email("trader@example.com")
+                .avatarUrl("https://ui-avatars.com/api/?name=Jan+Kowalski&background=2e7d32&color=fff")
+                .roles(Set.of(Role.TRADER))
                 .build();
 
         userRepository.saveAll(List.of(user1, user2));
@@ -75,7 +87,7 @@ public class DatabaseInitializer {
                 .symbol("AAPL")
                 .name("Apple Inc.")
                 .market("Stock Market")
-                .currency("USD")
+                .currencyType(CurrencyType.USD)
                 .sector("Technology")
                 .exchange("NASDAQ")
                 .currentPrice(new BigDecimal("192.50"))
@@ -85,7 +97,7 @@ public class DatabaseInitializer {
                 .symbol("GOOGL")
                 .name("Alphabet Inc.")
                 .market("Stock Market")
-                .currency("USD")
+                .currencyType(CurrencyType.USD)
                 .sector("Technology")
                 .exchange("NASDAQ")
                 .currentPrice(new BigDecimal("172.30"))
@@ -95,7 +107,7 @@ public class DatabaseInitializer {
                 .symbol("PKO")
                 .name("PKO Bank Polski")
                 .market("Stock Market")
-                .currency("PLN")
+                .currencyType(CurrencyType.PLN)
                 .sector("Banking")
                 .exchange("WSE")
                 .currentPrice(new BigDecimal("56.75"))
