@@ -1,6 +1,7 @@
 package com.financialtransactions.monitor.modules.trade.controller;
 
 import com.financialtransactions.monitor.domain.entity.Trade;
+import com.financialtransactions.monitor.modules.trade.dto.CreateTradeDto;
 import com.financialtransactions.monitor.modules.trade.dto.TradeWithCurrencyDto;
 import com.financialtransactions.monitor.modules.trade.service.TradeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,28 +50,6 @@ public class TradeController {
         }
     }
 
-    @GetMapping("/portfolio/{portfolioId}")
-    @Operation(summary = "Get trades by portfolio ID with currency information")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved trades"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Access denied to portfolio"),
-            @ApiResponse(responseCode = "404", description = "Portfolio not found")
-    })
-    public ResponseEntity<List<TradeWithCurrencyDto>> getTradesByPortfolioId(
-            @Parameter(description = "Portfolio ID", required = true)
-            @PathVariable Long portfolioId) {
-        try {
-            List<TradeWithCurrencyDto> trades = tradeService.getTradesByPortfolioId(portfolioId);
-            return ResponseEntity.ok(trades);
-        } catch (ResponseStatusException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("Error getting trades for portfolio {}: ", portfolioId, e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
-        }
-    }
-
     @GetMapping("/{id}")
     @Operation(summary = "Get trade by ID")
     @ApiResponses(value = {
@@ -93,6 +72,7 @@ public class TradeController {
         }
     }
 
+
     @PostMapping
     @Operation(summary = "Create new trade")
     @ApiResponses(value = {
@@ -103,10 +83,10 @@ public class TradeController {
             @ApiResponse(responseCode = "404", description = "Portfolio or Fund not found")
     })
     public ResponseEntity<Trade> createTrade(
-            @Parameter(description = "Trade data", required = true)
-            @Valid @RequestBody Trade trade) {
+            @Parameter(description = "Trade creation data", required = true)
+            @Valid @RequestBody CreateTradeDto createTradeDto) {
         try {
-            Trade createdTrade = tradeService.createTrade(trade);
+            Trade createdTrade = tradeService.createTrade(createTradeDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdTrade);
         } catch (ResponseStatusException e) {
             throw e;

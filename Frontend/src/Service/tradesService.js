@@ -45,4 +45,13 @@ export const tradesService = {
       throw error.response?.data || { message: "Failed to fetch trade" };
     }
   },
+
+  getAllFunds: async () => {
+    try {
+      const response = await api.get("/api/funds");
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to fetch funds" };
+    }
+  },
 };

@@ -7,6 +7,7 @@ import WalletSummary from "../../components/Dashboard/WalletSummary";
 import TradesList from "../../components/Trade/TradesList";
 import { TradeForm } from "../../components/Trade/TradeForm/TradeForm";
 import TradesAnalytics from "../../components/Trade/TradesAnalytics";
+import AddTradePage from "../Dashboard/AddTradePage";
 
 const AppRoutes = () => {
   return (
@@ -16,7 +17,7 @@ const AppRoutes = () => {
       <Route path="/dashboard" element={<Dashboard />}>
         <Route index element={<WalletSummary />} />
         <Route path="trades" element={<TradesList />} />
-        <Route path="trades/add" element={<TradeForm />} />
+        <Route path="trades/add" element={<AddTradePage />} />
         <Route path="trades/analytics" element={<TradesAnalytics />} />
       </Route>
       <Route path="*" element={<NotFound />} />

@@ -6,6 +6,8 @@ import com.financialtransactions.monitor.domain.entity.Trade;
 import com.financialtransactions.monitor.domain.enums.CurrencyType;
 import com.financialtransactions.monitor.modules.fund.repository.FundRepository;
 import com.financialtransactions.monitor.modules.portfolio.repository.PortfolioRepository;
+import com.financialtransactions.monitor.modules.portfolio.service.PortfolioService;
+import com.financialtransactions.monitor.modules.trade.dto.CreateTradeDto;
 import com.financialtransactions.monitor.modules.trade.dto.TradeWithCurrencyDto;
 import com.financialtransactions.monitor.modules.trade.repository.TradeRepository;
 import com.financialtransactions.monitor.security.model.User;
@@ -32,6 +34,7 @@ public class TradeService {
     private final TradeRepository tradeRepository;
     private final UserRepository userRepository;
     private final PortfolioRepository portfolioRepository;
+    private final PortfolioService portfolioService;
     private final FundRepository fundRepository;
     private final CurrencyExchangeService currencyExchangeService;
 
@@ -80,18 +83,22 @@ public class TradeService {
         return trade;
     }
 
-    public Trade createTrade(Trade trade) {
+    public Trade createTrade(CreateTradeDto createTradeDto) {
         User currentUser = getCurrentUser();
-        Portfolio portfolio = portfolioRepository.findById(trade.getPortfolio().getId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Portfolio not found"));
-        if (!portfolio.getUser().getId().equals(currentUser.getId())) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Access denied to this portfolio");
-        }
-        Fund fund = fundRepository.findById(trade.getFund().getId())
+
+        Fund fund = fundRepository.findById(createTradeDto.getFundId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Fund not found"));
+
+        Portfolio portfolio = portfolioService.findOrCreatePortfolio(currentUser, fund.getCurrencyType());
+
+        Trade trade = new Trade();
+        trade.setPortfolio(portfolio);
+        trade.setFund(fund);
+        trade.setTradeDate(createTradeDto.getTradeDate());
+        trade.setType(createTradeDto.getType());
+        trade.setQuantity(createTradeDto.getQuantity());
+        trade.setPricePerUnit(createTradeDto.getPricePerUnit());
 
         try {
             BigDecimal eurRate = currencyExchangeService.getEurPlnRate(trade.getTradeDate());
@@ -110,17 +117,16 @@ public class TradeService {
             trade.setTotalValuePln(totalValuePln);
 
         } catch (Exception e) {
-            log.error("Error fetching exchange rates for trade date {}: {}", trade.getTradeDate(), e.getMessage());
+            log.error("Error fetching exchange rates for trade date {}: {}",
+                    trade.getTradeDate(), e.getMessage());
             throw new ResponseStatusException(
                     HttpStatus.SERVICE_UNAVAILABLE,
                     "Unable to fetch exchange rates for trade date");
         }
 
-        trade.setPortfolio(portfolio);
-        trade.setFund(fund);
-
         log.info("Creating new trade for user: {}, portfolio: {} and fund: {}",
                 currentUser.getUsername(), portfolio.getName(), fund.getName());
+
         return tradeRepository.save(trade);
     }
 

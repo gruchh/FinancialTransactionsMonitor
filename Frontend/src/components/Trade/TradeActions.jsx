@@ -1,4 +1,5 @@
 import { useTrades } from "../../hooks/useTrades";
+import { toast } from 'react-toastify';
 
 const TradeActions = ({ trade, onEdit }) => {
   const { deleteTrade } = useTrades();
@@ -6,9 +7,10 @@ const TradeActions = ({ trade, onEdit }) => {
   const handleDelete = async () => {
     const result = await deleteTrade(trade.id);
     if (result.success) {
-      console.log("Transakcja została usunięta");
+      toast.success("Transaction deleted successfully");
     } else {
-      console.error("Błąd usuwania:", result.message);
+      toast.error("Failed to delete transaction: " + result.message);
+      console.error("Deletion error:", result.message);
     }
   };
 

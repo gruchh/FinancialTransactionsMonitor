@@ -1,313 +1,350 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
-import { AutoCalculateField } from "./AutoCalculateField";
-import { AnimatedExchangeRates } from "./AnimatedExchangeRates";
+import { useEffect, useState } from "react";
 import { tradeValidationSchema } from "./Validation/tradeValidationSchema";
+import { useTrades } from "../../../hooks/useTrades";
+import { fundsService } from "../../../service/fundsService";
+import { ExchangeRateManager } from "../../../hooks/exchangeRateManager";
+import toast from "react-hot-toast";
 
 export const TradeForm = ({
   trade = null,
-  funds = [],
-  onSubmit,
   onCancel,
   isLoading = false,
 }) => {
+  const { createTrade, updateTrade } = useTrades();
+  const [funds, setFunds] = useState([]);
+  const [fundsLoading, setFundsLoading] = useState(true);
+  const [exchangeRates, setExchangeRates] = useState({
+    eurPln: null,
+    usdPln: null,
+    lastUpdated: null,
+  });
+
+  const exchangeRateManager = ExchangeRateManager({
+    onRatesUpdate: setExchangeRates,
+    initialRates: {
+      eurPln: null,
+      usdPln: null,
+      lastUpdated: null,
+    },
+  });
+
+  useEffect(() => {
+    const fetchFunds = async () => {
+      try {
+        setFundsLoading(true);
+        const fundsData = await fundsService.fetchFunds();
+        setFunds(fundsData);
+      } catch (error) {
+        console.error("Error fetching funds:", error);
+        setFunds([]);
+      } finally {
+        setFundsLoading(false);
+      }
+    };
+    fetchFunds();
+  }, []);
+
   const initialValues = {
-    fund: trade?.fund || null,
+    fundId: trade?.fund?.id || "",
     tradeDate: trade?.tradeDate || new Date().toISOString().split("T")[0],
     type: trade?.type || "BUY",
-    currency: trade?.currency || "PLN",
     quantity: trade?.quantity || "",
     pricePerUnit: trade?.pricePerUnit || "",
-    eurPlnRate: trade?.eurPlnRate || "",
-    usdPlnRate: trade?.usdPlnRate || "",
-    totalValuePln: trade?.totalValuePln || "",
   };
 
-  const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
+  const calculatePreviewValue = (values) => {
+    const selectedFund = funds.find(f => f.id === parseInt(values.fundId));
+    if (!selectedFund || !values.quantity || !values.pricePerUnit) return "";
+    
+    const baseTotal = parseFloat(values.quantity) * parseFloat(values.pricePerUnit);
+    if (isNaN(baseTotal)) return "";
+    
+    const currency = selectedFund.currencyType;
+    
+    if (currency === "PLN") {
+      return baseTotal.toFixed(2);
+    } else if (currency === "EUR" && exchangeRates.eurPln) {
+      const eurRate = typeof exchangeRates.eurPln === 'number' ? exchangeRates.eurPln : parseFloat(exchangeRates.eurPln);
+      return !isNaN(eurRate) ? (baseTotal * eurRate).toFixed(2) : "";
+    } else if (currency === "USD" && exchangeRates.usdPln) {
+      const usdRate = typeof exchangeRates.usdPln === 'number' ? exchangeRates.usdPln : parseFloat(exchangeRates.usdPln);
+      return !isNaN(usdRate) ? (baseTotal * usdRate).toFixed(2) : "";
+    }
+    return "Rate not available";
+  };
+
+  const formatExchangeRate = (rate) => {
+    if (!rate) return "Loading...";
+    
+    const numericRate = typeof rate === 'number' ? rate : parseFloat(rate);
+    
+    return !isNaN(numericRate) ? numericRate.toFixed(4) : "Loading...";
+  };
+
+  const handleSubmit = async (values, { setSubmitting, setFieldError, resetForm }) => {
     try {
-      const baseTotal =
-        parseFloat(values.quantity) * parseFloat(values.pricePerUnit);
-      let totalInPln = baseTotal;
-
-      if (values.currency === "EUR" && values.eurPlnRate) {
-        totalInPln = baseTotal * parseFloat(values.eurPlnRate);
-      } else if (values.currency === "USD" && values.usdPlnRate) {
-        totalInPln = baseTotal * parseFloat(values.usdPlnRate);
-      }
-
+      setSubmitting(true);
+      
       const submitData = {
-        ...values,
-        totalValuePln: totalInPln.toFixed(2),
+        fundId: parseInt(values.fundId),
+        tradeDate: values.tradeDate,
+        type: values.type,
+        quantity: parseFloat(values.quantity),
+        pricePerUnit: parseFloat(values.pricePerUnit),
       };
 
-      await onSubmit(submitData);
+      const result = trade
+        ? await updateTrade(trade.id, submitData)
+        : await createTrade(submitData);
+        
+      if (result.success) {
+        toast.success(`Trade ${trade ? "updated" : "created"} successfully!`);
+        resetForm();
+        onCancel();
+      } else {
+        toast.error(`Failed to ${trade ? "update" : "create"} trade: ${result.message}`);
+        if (result.fieldErrors) {
+          Object.entries(result.fieldErrors).forEach(([field, error]) => {
+            setFieldError(field, error);
+          });
+        } else {
+          setFieldError("general", result.message || "An error occurred while saving");
+        }
+      }
     } catch (error) {
       console.error("Error submitting trade:", error);
-      if (error.fieldErrors) {
-        Object.keys(error.fieldErrors).forEach((field) => {
-          setFieldError(field, error.fieldErrors[field]);
-        });
-      }
+      setFieldError("general", "An unexpected error occurred");
     } finally {
       setSubmitting(false);
     }
   };
 
+  const refreshRates = async () => {
+    await exchangeRateManager.refreshRates();
+  };
+
+  if (fundsLoading) {
+    return (
+      <div className="flex justify-center">
+        <div className="w-full max-w-4xl bg-white p-4 rounded-lg shadow-md">
+          <div className="animate-pulse space-y-2">
+            <div className="h-6 bg-gray-200 rounded"></div>
+            <div className="h-8 bg-gray-200 rounded"></div>
+            <div className="h-8 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full flex flex-col">
-      <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">
+    <div className="flex justify-center">
+      <div className="w-full max-w-4xl bg-white p-4 rounded-lg shadow-md">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">
           {trade ? "Edit Trade" : "Add New Trade"}
         </h2>
-
+        
         <Formik
           initialValues={initialValues}
           validationSchema={tradeValidationSchema}
-          onSubmit={handleSubmit}
-          enableReinitialize={true}
+          onSubmit={(values, actions) => {
+            return handleSubmit(values, actions);
+          }}
+          enableReinitialize
         >
-          {({ values, setFieldValue, isSubmitting, errors, touched }) => (
-            <Form className="space-y-6">
-              <AutoCalculateField
-                values={values}
-                setFieldValue={setFieldValue}
-              />
+          {({ values, setFieldValue, isSubmitting, errors, touched }) => {
+            const selectedFund = funds.find(f => f.id === parseInt(values.fundId));
+            const previewValue = calculatePreviewValue(values);
+            
+            return (
+              <Form className="space-y-4">
+                <ErrorMessage
+                  name="general"
+                  component="div"
+                  className="text-red-500 text-sm p-2 bg-red-50 border border-red-200 rounded-md"
+                />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fund <span className="text-red-500">*</span>
-                </label>
-                <Field name="fund">
-                  {({ field }) => (
-                    <select
-                      {...field}
-                      value={values.fund?.id || ""}
-                      onChange={(e) => {
-                        const selectedFund = funds.find(
-                          (f) => f.id === parseInt(e.target.value)
-                        );
-                        setFieldValue("fund", selectedFund || null);
-                      }}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                        errors.fund && touched.fund
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Fund <span className="text-red-500">*</span>
+                    </label>
+                    <Field
+                      name="fundId"
+                      as="select"
+                      className={`w-full px-2 py-1 border rounded-md text-sm ${
+                        errors.fundId && touched.fundId
                           ? "border-red-500 bg-red-50"
                           : "border-gray-300"
                       }`}
                     >
-                      <option value="">Select a fund</option>
+                      <option value="">Select fund</option>
                       {funds.map((fund) => (
                         <option key={fund.id} value={fund.id}>
-                          {fund.name} ({fund.symbol || fund.code})
+                          {fund.name} ({fund.symbol}) - {fund.currencyType}
                         </option>
                       ))}
-                    </select>
-                  )}
-                </Field>
-                <ErrorMessage
-                  name="fund"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
-              </div>
+                    </Field>
+                    <ErrorMessage name="fundId" component="div" className="text-red-500 text-xs mt-1" />
+                  </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Trade Date <span className="text-red-500">*</span>
-                  </label>
-                  <Field
-                    name="tradeDate"
-                    type="date"
-                    className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                      errors.tradeDate && touched.tradeDate
-                        ? "border-red-500 bg-red-50"
-                        : "border-gray-300"
-                    }`}
-                  />
-                  <ErrorMessage
-                    name="tradeDate"
-                    component="div"
-                    className="text-red-500 text-sm mt-1"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Currency <span className="text-red-500">*</span>
-                  </label>
-                  <Field
-                    name="currency"
-                    as="select"
-                    className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                      errors.currency && touched.currency
-                        ? "border-red-500 bg-red-50"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    <option value="PLN">PLN (Polish Złoty)</option>
-                    <option value="EUR">EUR (Euro)</option>
-                    <option value="USD">USD (US Dollar)</option>
-                  </Field>
-                  <ErrorMessage
-                    name="currency"
-                    component="div"
-                    className="text-red-500 text-sm mt-1"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Trade Type <span className="text-red-500">*</span>
-                </label>
-                <div className="flex space-x-6">
-                  <label className="flex items-center">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Trade Date <span className="text-red-500">*</span>
+                    </label>
                     <Field
-                      type="radio"
-                      name="type"
-                      value="BUY"
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      name="tradeDate"
+                      type="date"
+                      max={new Date().toISOString().split('T')[0]}
+                      className={`w-full px-2 py-1 border rounded-md text-sm ${
+                        errors.tradeDate && touched.tradeDate
+                          ? "border-red-500 bg-red-50"
+                          : "border-gray-300"
+                      }`}
                     />
-                    <span className="ml-2 text-sm text-gray-700 flex items-center">
-                      <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                      BUY
-                    </span>
-                  </label>
-                  <label className="flex items-center">
-                    <Field
-                      type="radio"
-                      name="type"
-                      value="SELL"
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                    />
-                    <span className="ml-2 text-sm text-gray-700 flex items-center">
-                      <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                      SELL
-                    </span>
-                  </label>
-                </div>
-                <ErrorMessage
-                  name="type"
-                  component="div"
-                  className="text-red-500 text-sm mt-1"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Quantity <span className="text-red-500">*</span>
-                  </label>
-                  <Field
-                    name="quantity"
-                    type="number"
-                    step="0.0001"
-                    placeholder="0.0000"
-                    className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                      errors.quantity && touched.quantity
-                        ? "border-red-500 bg-red-50"
-                        : "border-gray-300"
-                    }`}
-                  />
-                  <ErrorMessage
-                    name="quantity"
-                    component="div"
-                    className="text-red-500 text-sm mt-1"
-                  />
+                    <ErrorMessage name="tradeDate" component="div" className="text-red-500 text-xs mt-1" />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Price Per Unit ({values.currency}){" "}
-                    <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Trade Type <span className="text-red-500">*</span>
                   </label>
-                  <Field
-                    name="pricePerUnit"
-                    type="number"
-                    step="0.0001"
-                    placeholder="0.0000"
-                    className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                      errors.pricePerUnit && touched.pricePerUnit
-                        ? "border-red-500 bg-red-50"
-                        : "border-gray-300"
-                    }`}
-                  />
-                  <ErrorMessage
-                    name="pricePerUnit"
-                    component="div"
-                    className="text-red-500 text-sm mt-1"
-                  />
-                </div>
-              </div>
-
-              <AnimatedExchangeRates
-                currency={values.currency}
-                errors={errors}
-                touched={touched}
-              />
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Total Value (PLN)
-                </label>
-                <Field
-                  name="totalValuePln"
-                  type="text"
-                  readOnly
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-700 cursor-not-allowed"
-                  placeholder="Auto-calculated"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  {values.currency === "PLN"
-                    ? "Automatically calculated from quantity × price per unit"
-                    : `Automatically calculated from quantity × price per unit × ${values.currency}/PLN rate`}
-                </p>
-              </div>
-
-              <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={onCancel}
-                  disabled={isSubmitting || isLoading}
-                  className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || isLoading}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
-                >
-                  {(isSubmitting || isLoading) && (
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
+                  <div className="flex space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setFieldValue("type", "BUY")}
+                      className={`flex items-center px-4 py-2 rounded-md border-2 text-sm font-medium ${
+                        values.type === "BUY"
+                          ? "border-green-500 bg-green-50 text-green-700"
+                          : "border-gray-300 bg-white text-gray-700 hover:border-green-300"
+                      }`}
                     >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                  )}
-                  {isSubmitting || isLoading
-                    ? "Saving..."
-                    : trade
-                    ? "Update Trade"
-                    : "Create Trade"}
-                </button>
-              </div>
-            </Form>
-          )}
+                      BUY
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFieldValue("type", "SELL")}
+                      className={`flex items-center px-4 py-2 rounded-md border-2 text-sm font-medium ${
+                        values.type === "SELL"
+                          ? "border-red-500 bg-red-50 text-red-700"
+                          : "border-gray-300 bg-white text-gray-700 hover:border-red-300"
+                      }`}
+                    >
+                      SELL
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Quantity <span className="text-red-500">*</span>
+                    </label>
+                    <Field
+                      name="quantity"
+                      type="number"
+                      step="0.0001"
+                      min="0.0001"
+                      placeholder="0.0000"
+                      className={`w-full px-2 py-1 border rounded-md text-sm ${
+                        errors.quantity && touched.quantity
+                          ? "border-red-500 bg-red-50"
+                          : "border-gray-300"
+                      }`}
+                    />
+                    <ErrorMessage name="quantity" component="div" className="text-red-500 text-xs mt-1" />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Price Per Unit {selectedFund && `(${selectedFund.currencyType})`}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <Field
+                      name="pricePerUnit"
+                      type="number"
+                      step="0.0001"
+                      min="0.0001"
+                      placeholder="0.0000"
+                      className={`w-full px-2 py-1 border rounded-md text-sm ${
+                        errors.pricePerUnit && touched.pricePerUnit
+                          ? "border-red-500 bg-red-50"
+                          : "border-gray-300"
+                      }`}
+                    />
+                    <ErrorMessage name="pricePerUnit" component="div" className="text-red-500 text-xs mt-1" />
+                  </div>
+                </div>
+
+                {selectedFund && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-sm font-medium text-gray-700">Preview & Exchange Rates</h3>
+                      <button
+                        type="button"
+                        onClick={refreshRates}
+                        className="text-xs text-blue-600 hover:text-blue-800"
+                      >
+                        Refresh rates
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Total Value (PLN):</span>
+                        <div className="font-medium">
+                          {previewValue ? `${previewValue} PLN` : "Enter values to see preview"}
+                        </div>
+                      </div>
+                      
+                      {selectedFund.currencyType !== "PLN" && (
+                        <>
+                          <div>
+                            <span className="text-gray-600">EUR/PLN Rate:</span>
+                            <div className="font-medium">
+                              {formatExchangeRate(exchangeRates.eurPln)}
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">USD/PLN Rate:</span>
+                            <div className="font-medium">
+                              {formatExchangeRate(exchangeRates.usdPln)}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    
+                    <p className="text-xs text-gray-500 mt-2">
+                      * Final values will be calculated by the system using exchange rates for the trade date
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex justify-end space-x-2 pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onCancel();
+                    }}
+                    disabled={isSubmitting || isLoading}
+                    className="px-4 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || isLoading}
+                    className="px-4 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {isSubmitting || isLoading ? "Saving..." : trade ? "Update Trade" : "Create Trade"}
+                  </button>
+                </div>
+              </Form>
+            );
+          }}
         </Formik>
       </div>
     </div>

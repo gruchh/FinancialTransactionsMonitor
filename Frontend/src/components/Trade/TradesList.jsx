@@ -33,7 +33,7 @@ const TradesList = ({ onFundClick }) => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Czy na pewno chcesz usunąć tę transakcję?')) {
+    if (window.confirm('Czy na pewno chcesz usułnąć tę transakcję?')) {
       const result = await deleteTrade(id);
       if (!result.success) {
         console.error(result.message);
